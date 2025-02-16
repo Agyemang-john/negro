@@ -10,7 +10,7 @@ import api from '../../utils/api'
 import NoneProduct from "./NoneProduct";
 // import useVariantChange, {capitalizeEachWord, refreshDetail}  from "../../utils/Function";
 // import { useCart } from '../../utils/CartContext';
-// import ColorProduct from './ColorProduct';
+import ColorProduct from './ColorProduct';
 import SizeProduct from './SizeProduct';
 import SizeColorProduct from './SizeColorProduct';
 import Avatar from '@mui/material/Avatar';
@@ -218,7 +218,7 @@ const ProductDetail = ({ initialData, sku, slug }) => {
             variantComponent = <SizeProduct data={productData} handleFollowToggle={handleFollowToggle} isFollowing={isFollowing} />;
             break;
         case "Color":
-            // variantComponent = <VariantColor />;
+            variantComponent = <ColorProduct productData={productData}/>;
             break;
         case "Size-Color":
             variantComponent = <SizeColorProduct productData={productData} />;

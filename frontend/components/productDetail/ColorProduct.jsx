@@ -1,13 +1,14 @@
+"use client";
+
 import React, {useEffect, useState} from 'react'
 // import useVariantChange, {refreshDetail, truncateText}  from "../../utils/Function";
 import Link from 'next/link';
 import ReactImageMagnify from 'react-image-magnify';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 
 // import QuantityCounter from '../../utils/Quantity';
 // import { addToCart } from '../../utils/CartFunctions';
 // import { useAuthStore } from '../../api/authStore';
-// import api from '../../api/api';
-// import { SERVER_URL } from '../../api/constants';
 // import { useCart } from '../../utils/CartContext';
 import Rating from '@mui/material/Rating';
 import Skeleton from '@mui/material/Skeleton';
@@ -32,9 +33,12 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import VerifiedIcon from '@mui/icons-material/Verified';
+import api from '@/utils/api';
 
 
 const ColorProduct = ({ productData }) => {
+  const router = useRouter();
+  const { sku, slug } = useParams();
   const [open, setOpen] = useState(false);
 
   const handleOpen = () => setOpen(true);
@@ -46,8 +50,8 @@ const ColorProduct = ({ productData }) => {
 
   const [variantimages, setVarImages] = useState(productData.variant_data.variant_images);
   const [quantity, setQuantity] = useState(1);
-    const [variantId, setVariantId] = useState(variant.id); // You can set initial variant if applicable
-    const [productId, setProductId] = useState(p.id);
+    // const [variantId, setVariantId] = useState(variant.id); // You can set initial variant if applicable
+    // const [productId, setProductId] = useState(p.id);
     const [isInCart, setIsInCart] = useState(false);
     const isAuthenticated = useState(false);
     const [loading, setLoading] = useState(true); 
@@ -56,9 +60,44 @@ const ColorProduct = ({ productData }) => {
 
     const [productDetail, setProdductDetail] = useState(productData.product);
     const [variantDetail, setvariantDetail] = useState(productData.variant_data.variant);
-    const [colorDetail, setcolorDetail] = useState(productData.variant_data.sizes)
+    const [colorDetail, setcolorDetail] = useState(productData.variant_data.colors);
 
     const [allImages, setAllImages] = useState(productData.p_images);
+    const [error, setError] = useState(null);
+    
+
+    const fetchProductData = async (variantId) => {
+      try {
+        const { data } = await api.get(`/api/v1/product/${sku}/${slug}/`, {
+          params: { variantid: variantId || '' },
+        });
+        setMainImage(data.variant_data.variant.image);
+        setProdductDetail(data.product);
+        setvariantDetail(data.variant_data.variant);
+        setcolorDetail(data.variant_data.colors);
+        setAllImages(data.p_images);
+        setVarImages(data.variant_data.variant_images);
+        console.log("Hellooo: ",{...data})
+      } catch (error) {
+        console.error('Error fetching product data:', error);
+        setError('Failed to load product data');
+      }
+    };
+  
+    const handleVariantChange = async (newVariantId) => {
+      await fetchProductData(newVariantId);
+  
+      // Update the URL without reloading the page
+      router.push(`?variantid=${newVariantId}`, { scroll: false });
+    };
+
+    const handleImageClick = async (v) => {
+      console.log(v)
+    
+      await handleVariantChange(v);
+    
+      setLoading(false);
+    };
 
 
   
@@ -260,12 +299,6 @@ const ColorProduct = ({ productData }) => {
     // };
 
 
-    const handleImageClick = async (id) => {
-        // setActiveId(id);
-        // await handleVariantChange(id);
-        // await checkCart();
-    };
-
 
   const isVariant = productDetail && colorDetail;
 
@@ -278,40 +311,52 @@ const ColorProduct = ({ productData }) => {
                 <div className="row">
                     <div className="col-md-6">
                         <div className="product-gallery">
-                              <figure className="product-main-image">
-                                  <span className="product-label label-top">Top</span>
-                                  <img id="product-zoom" src={`${mainImage}`} data-zoom-image={`${mainImage}`} alt="product image" />
-                                  <Link href="#" id="btn-product-gallery" className="btn-product-gallery">
-                                  <ZoomInIcon />
-                                  </Link>
-                              </figure>
+                        <figure className="product-main-image">
+                              <span className="product-label label-top">Top</span>
+                                <ReactImageMagnify
+                                  
+                                  {...{
+                                    smallImage: {
+                                      alt: 'Product Image',
+                                      isFluidWidth: true,
+                                      src: mainImage,
+                                    },
+                                    largeImage: {
+                                      src: mainImage,
+                                      width: 1300,
+                                      height: 1300,
+                                    },
+                                  }}
+                                  style={{
+                                    position: 'relative', // Required for z-index to work
+                                    zIndex: 10,           // Adjust the z-index as needed
+                                  }}
+                                />
+                              <a herf="#" id="btn-product-gallery" className="btn-product-gallery">
+                              <ZoomInIcon />
+                              </a>
+                          </figure>
                             
 
                             <div id="product-zoom-gallery" className="product-image-gallery">
-                                  {isVariant ? (
-                                      <Link className="product-gallery-item active" href="#" data-image={`${variantDetail.image}`} data-zoom-image={`${variantDetail.image}`}>
-                                          <img src={`${variantDetail.image}`} alt="product side" />
-                                      </Link>
-                                  ):(
+                                <Link className="product-gallery-item active" href="#" >
+                                    <img onClick={() => setMainImage(variantDetail.image)} src={`${variantDetail.image}`} alt="product side" />
+                                </Link>
+                                  
 
-                                      <Link className="product-gallery-item active" href="#" data-image={`${productDetail.image}`} data-zoom-image={`${productDetail.image}`}>
-                                          <img src={`${prodductDetail.image}`} alt="product side" />
-                                      </Link>
-                                  )}
-
-                                {variantimages.length === 0 ? (
+                                {!variantimages ? (
                                   <>
                                     {allImages.map((p) => (
-                                        <Link href={'#'} key={p.id} className="product-gallery-item" data-image={`${p.images}`} data-zoom-image={`${p.images}`}>
+                                        <Link href={'#'} key={p.id} className="product-gallery-item" >
                                             <img onClick={() => setMainImage(p.images)} src={`${p.images}`} alt="product cross" />
                                         </Link>
                                     ))}
                                   </>
                                 ):(
                                   <>
-                                    {variantimages.map((p) => (
-                                      <Link href={'#'} key={p.id} className="product-gallery-item" data-image={`${p.images}`} data-zoom-image={`${p.images}`}>
-                                            <img src={`${p.images}`} alt="product cross" />
+                                    {variantimages && variantimages.map((p) => (
+                                      <Link href={'#'} key={p.id} className="product-gallery-item" >
+                                            <img onClick={() => setMainImage(p.images)} src={`${p.images}`} alt="product cross" />
                                       </Link>
                                     ))}
                                   </>
@@ -336,7 +381,7 @@ const ColorProduct = ({ productData }) => {
 
                             <div className="product-price">
                                 <span id="price" className="new-price">GHS{variantDetail.price.toFixed(2)}</span>
-                                <span className="old-price">GHS{productData.old_price.toFixed(2)}</span>
+                                <span className="old-price">GHS{productDetail.old_price.toFixed(2)}</span>
                             </div>
                             <Divider/>
                             {/* <Skeleton variant="rectangular" width={210} height={118} /> */}

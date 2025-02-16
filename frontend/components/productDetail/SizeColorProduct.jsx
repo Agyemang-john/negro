@@ -178,7 +178,7 @@ const SizeColorProduct = ({ productData }) => {
                                     <img onClick={() => setMainImage(variantDetail.image)} src={`${variantDetail.image}`} alt="product side" />
                                 </a>
 
-                              {variantimages.length < 1 ? (
+                              {!variantimages? (
                                 <>
                                   {allImages && allImages.map((p) => (
                                       <a key={p.id} href="#" className="product-gallery-item" >
