@@ -1,5 +1,6 @@
 import { fetchProductData } from "../../../lib/productApi"; // Import function from lib
 import ProductDetail from '../../../components/productDetail/ProductDetail';
+import api from "@/utils/api";
 
 export default async function Product({ params, searchParams }) {
 
@@ -7,14 +8,30 @@ export default async function Product({ params, searchParams }) {
 
     const { sku, slug } = await params;
 
+    try {
+        let url = `/api/v1/product/${sku}/${slug}/`;
+        if (variantid) {
+            const query = new URLSearchParams({ variantid }).toString()
+            url += `?${query}`;
+        }
+        const { data } = await api.get(url, {
+            headers: {
+              "Cache-Control": "no-store", // Avoid caching for dynamic content
+            },
+        });
 
-    const productData = await fetchProductData(sku, slug, variantid);
-    console.log(productData);
-    return (
-        <>
-            <ProductDetail data={productData}/>
-        </>
-    )
+        console.log(data);
+
+        return (
+            <>
+                <ProductDetail initialData={data} sku={sku} slug={slug}  />
+            </>
+        )
+        
+    } catch (error) {
+        console.error("Error fetching product data:", error);
+        
+    }    
 }
 
 // // Optional: Improve SEO with `generateMetadata`

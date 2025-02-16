@@ -12,7 +12,7 @@ import ReactImageMagnify from 'react-image-magnify';
 import Rating from '@mui/material/Rating';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
-// import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import XIcon from '@mui/icons-material/X';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import FacebookIcon from '@mui/icons-material/Facebook';
@@ -42,27 +42,31 @@ import Chip from '@mui/material/Chip';
 import Button from '@mui/material/Button';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import VerifiedIcon from '@mui/icons-material/Verified';
+import api from '@/utils/api';
 
-const SizeProduct = ({ productData, handleVariantChange, handleFollowToggle, isFollowing }) => {
+const SizeProduct = ({ data, handleFollowToggle, isFollowing }) => {
   
   // const { cartCount, orderSummary, address, refreshCart } = useCart(); 
+  const router = useRouter();
+  const { sku, slug } = useParams();
   const [open, setOpen] = useState(false);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
     const [address, setAddress] = useState(null);
-    const [p, setProduct] = useState(productData.product);
-    const [mainImage, setMainImage] = useState(productData.variant_data.variant.image || null);
-    const [variantimages, setVarImages] = useState(productData.variant_data.variant_images);
+    const [p, setProduct] = useState(data.product);
+    const [mainImage, setMainImage] = useState(data.variant_data.variant.image || null);
+    const [variantimages, setVarImages] = useState(data.variant_data.variant_images);
     const [quantity, setQuantity] = useState(1);
     const [isInCart, setIsInCart] = useState(false);
     const isAuthenticated = useState(false);
     const [loading, setLoading] = useState(true); 
-    const [productDetail, setProdductDetail] = useState(productData.product);
-    const [variantDetail, setvariantDetail] = useState(productData.variant_data.variant);
-    const [sizeDetail, setSizeDetail] = useState(productData.variant_data.sizes);
-    const [allImages, setAllImages] = useState(productData.p_images);
+    const [productDetail, setProdductDetail] = useState(data.product);
+    const [variantDetail, setvariantDetail] = useState(data.variant_data.variant);
+    const [sizeDetail, setSizeDetail] = useState(data.variant_data.sizes);
+    const [allImages, setAllImages] = useState(data.p_images);
+    const [error, setError] = useState(null);
 
     const [openchart, setOpenChart] = React.useState(false);
     const [scroll, setScroll] = React.useState('paper');
@@ -75,9 +79,34 @@ const SizeProduct = ({ productData, handleVariantChange, handleFollowToggle, isF
     const handleCloseChart = () => {
       setOpenChart(false);
     }
-  
 
-  const isVariant = productDetail && sizeDetail;
+    const fetchProductData = async (variantId) => {
+      try {
+        const { data } = await api.get(`/api/v1/product/${sku}/${slug}/`, {
+          params: { variantid: variantId || '' },
+        });
+        setMainImage(data.variant_data.variant.image);
+        setProdductDetail(data.product);
+        setvariantDetail(data.variant_data.variant);
+        setSizeDetail(data.variant_data.sizes);
+        setAllImages(data.p_images);
+        console.log("Hellooo: ",{...data})
+      } catch (error) {
+        console.error('Error fetching product data:', error);
+        setError('Failed to load product data');
+      }
+    };
+  
+    const handleVariantChange = async (newVariantId) => {
+      await fetchProductData(newVariantId);
+  
+      // Update the URL without reloading the page
+      router.push(`?variantid=${newVariantId}`, { scroll: false });
+    };
+
+ 
+  
+ 
 
 
   return (
@@ -147,8 +176,8 @@ const SizeProduct = ({ productData, handleVariantChange, handleFollowToggle, isF
                           <h1 className="product-title">{productDetail.title}</h1>
 
                           <div className="ratings-container">
-                            <Rating name={`rating-1`} value={productData.average_rating} precision={0.5} readOnly sx={{ marginLeft: 1 }}/>
-                                <a className="ratings-text" href="#product-review-link" id="review-link">( {productData.review_count} Review{productData.review_count !== 1 ? 's':''})</a>
+                            <Rating name={`rating-1`} value={data.average_rating} precision={0.5} readOnly sx={{ marginLeft: 1 }}/>
+                                <a className="ratings-text" href="#product-review-link" id="review-link">( {data.review_count} Review{data.review_count !== 1 ? 's':''})</a>
                             </div>
 
                             <div className="product-price">

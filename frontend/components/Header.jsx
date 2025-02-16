@@ -74,7 +74,7 @@ function Header() {
                         </button>
 
                         <Link href={'/'} prefetch={false} className="logo">
-                            <img src="" alt="Logo" width="105" height="25" />
+                            <img src="../" alt="Logo" width="105" height="25" />
                         </Link>
                     </div>
 

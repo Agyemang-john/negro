@@ -5,7 +5,7 @@ import { setAuthUser, refreshAccessToken } from './auth';  // Import shared logi
 // Create an axios instance with a base URL
 const api = axios.create({
     baseURL: 'http://localhost:8000',
-    // baseURL: 'http://192.168.110.89:8000',
+    // baseURL: 'http://192.168.56.89:8000',
     withCredentials: true,
     // timeout: 10000,  // Set a timeout to prevent indefinitely hanging requests
 });

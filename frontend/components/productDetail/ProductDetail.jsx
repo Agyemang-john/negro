@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 // import { SERVER_URL } from '../../api/constants';
 import api from '../../utils/api'
@@ -32,6 +32,8 @@ import CheckIcon from '@mui/icons-material/Check';
 // import { truncateText } from '../../utils/Function'; // Adjust the path if needed
 // import { postViewedProducts, trackProductView } from '../../utils/CartFunctions';
 import Swal from 'sweetalert2';
+// import { fetchProductData } from '@/lib/productApi';
+import {fetchProductData} from '../../lib/productApi';
 // import RecentlyViewedProducts from '../partials/RecentlyViewedProducts';
 
 
@@ -94,10 +96,9 @@ const StyledTypography = styled(Typography)({
   };
 
 
-const ProductDetail = ({ data }) => {
-  const [ productData, setProductData ] = useState(data||null);
-  const { sku, slug } = useParams();
-  // // const isAuthenticated = useAuthStore.getState().isLoggedIn();
+const ProductDetail = ({ initialData, sku, slug }) => {
+  const [ productData, setProductData ] = useState(initialData|| null );
+   // // const isAuthenticated = useAuthStore.getState().isLoggedIn();
   const [isAuthenticated, setIsAuthenticated] =  useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -109,29 +110,36 @@ const ProductDetail = ({ data }) => {
   const [rating, setRating] = useState(3);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [feedback, setFeedback] = useState('');
-  const [isFollowing, setIsFollowing] = useState(productData.is_following);
+  const [isFollowing, setIsFollowing] = useState(productData?.is_following|| false) ;
+ 
 
+  const fetchProductData = async (variantId) => {
+    try {
+      const response = await api.get(`/api/v1/product/${sku}/${slug}/`, {
+        params: { variantid: variantId || '' },
+      });
 
-  // const onVariantSelect = (variantId) => {
-  //   handleVariantChange(variantId);
-  // };
+      setProductData(response.data);
+    } catch (error) {
+      console.error('Error fetching product data:', error);
+      setError('Failed to load product data');
+    }
+  };
 
-    const handleVariantChange = async (newVariantId) => {
-      try {
-        const response = await api.get(`/api/v1/product/${sku}/${slug}/`, {
-          params: { variantid: newVariantId || null },
-        });        
-        setProductData(response.data);  // Update the state with new variant data
-      } catch (error) {
-        console.error('Error fetching product data:', error);
-        // Handle error state if necessary
-      }
-    
-      // Update the URL without triggering a page reload
-      router.push(`?variantid=${newVariantId}`, undefined, { shallow: true });
-    
-      // Fetch the new product data using Axios
-    };
+  const handleVariantChange = async (newVariantId) => {
+    await fetchProductData(newVariantId);
+
+    // Update the URL without reloading the page
+    router.push(`?variantid=${newVariantId}`, undefined, { shallow: true });
+  };
+
+  // Automatically update product data when variant changes in URL
+  useEffect(() => {
+    const variantId = searchParams.get('variantid');
+    if (variantId) {
+      fetchProductData(variantId);
+    }
+  }, [searchParams, sku, slug]);
 
   const getLabel = (value) => {
     return labels[value] || '';
@@ -207,7 +215,7 @@ const ProductDetail = ({ data }) => {
             variantComponent = <NoneProduct productData={productData} />;
             break;
         case "Size":
-            variantComponent = <SizeProduct productData={productData} handleVariantChange={handleVariantChange} handleFollowToggle={handleFollowToggle} isFollowing={isFollowing} />;
+            variantComponent = <SizeProduct data={productData} handleFollowToggle={handleFollowToggle} isFollowing={isFollowing} />;
             break;
         case "Color":
             // variantComponent = <VariantColor />;
