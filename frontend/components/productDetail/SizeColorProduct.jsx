@@ -3,13 +3,14 @@
 import React, {useEffect, useState} from 'react';
 import Link from 'next/link';
 import ReactImageMagnify from 'react-image-magnify';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 
 // import { Link } from 'react-router-dom';
 // import { useAuthStore } from '../../api/authStore';
-// import api from '../../api/api';
+import api from '@/utils/api';
+
 // import { SERVER_URL } from '../../api/constants';
 // import { useCart } from '../../utils/CartContext';
-// import { useLocation, useNavigate, useParams } from 'react-router-dom';
 // import { refreshDetail, truncateText } from '../../utils/Function';
 import Rating from '@mui/material/Rating';
 import AssignmentIcon from '@mui/icons-material/Assignment';
@@ -47,7 +48,8 @@ import WhereToVoteIcon from '@mui/icons-material/WhereToVote';
 
 const SizeColorProduct = ({ productData }) => {
   // const { cartCount, orderSummary, address, refreshCart } = useCart(); 
-  // const { sku, slug }= useParams();
+  const router = useRouter();
+    const { sku, slug } = useParams();
   const [open, setOpen] = useState(false);
   const [isFollowing, setFollowing] = useState(productData.is_following);
 
@@ -72,17 +74,71 @@ const SizeColorProduct = ({ productData }) => {
   const [variantimages, setVarImages] = useState(productData.variant_data.variant_images);
 
 
-const [openchart, setOpenChart] = React.useState(false);
-  const [scroll, setScroll] = React.useState('paper');
+  const [openchart, setOpenChart] = React.useState(false);
+    const [scroll, setScroll] = React.useState('paper');
 
-const handleClickOpen = (scrollType) => () => {
-  setOpenChart(true);
-  setScroll(scrollType);
-};
+  const handleClickOpen = (scrollType) => () => {
+    setOpenChart(true);
+    setScroll(scrollType);
+  };
 
-const handleCloseChart = () => {
-  setOpenChart(false);
-};
+  const handleCloseChart = () => {
+    setOpenChart(false);
+  };
+
+    const handleSizeChange = async (event) => {
+      const selectedSizeId = event.target.value;
+
+      try {
+        const { data } = await api.post('/api/v1/product/ajaxcolor/', {
+          size: selectedSizeId,
+          productid: productData.product.id,
+        });
+        setcolorDetail(data.colors);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
+
+    const fetchProductData = async (variantId) => {
+      try {
+        const { data } = await api.get(`/api/v1/product/${sku}/${slug}/`, {
+          params: { variantid: variantId || '' },
+        });
+        setMainImage(data.variant_data.variant.image);
+        setProdductDetail(data.product);
+        setvariantDetail(data.variant_data.variant);
+        setSizeDetail(data.variant_data.sizes);
+        setAllImages(data.p_images);
+        setVarImages(productData.variant_data.variant_images);
+        console.log("Hellooo: ",{...data})
+      } catch (error) {
+        console.error('Error fetching product data:', error);
+        setError('Failed to load product data');
+      }
+    };
+  
+    const handleVariantChange = async (newVariantId) => {
+      await fetchProductData(newVariantId);
+  
+      // Update the URL without reloading the page
+      router.push(`?variantid=${newVariantId}`, { scroll: false });
+    };
+
+    const handleImageClick = async (v) => {
+      // setLoading(true);
+      if (v.quantity > 0) {
+        // setActiveId(v.id);
+        handleVariantChange(v.id);
+        // await checkCart();
+        return; // Don't do anything if the variant is not available
+      } else{
+        alert("Error");
+      }
+      setLoading(false);
+    };
+
+    
 
 
   return (
