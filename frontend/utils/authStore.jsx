@@ -3,16 +3,17 @@ import { create } from 'zustand';
 
 // Define the Zustand store
 const useAuthStore = create((set, get) => ({
-    user: null, // This will hold the user information
+    user: typeof window !== "undefined" ? JSON.parse(localStorage.getItem('user')) || null : null,
     loading: true, // Loading state to show loaders or spinners when necessary
     error: null, // Error state to manage login failures or issues
 
     // Action to set the user after successful login
-    setUser: (user) => set(() => ({
-        user,
-        loading: false,
-        error: null,
-    })),
+    setUser: (user) => {
+        if (typeof window !== "undefined") {
+            localStorage.setItem('user', JSON.stringify(user));  // Store in browser
+        }
+        set(() => ({ user, loading: false, error: null }));
+    },
 
     // Action to handle login errors
     setError: (error) => set(() => ({

@@ -5,12 +5,20 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PersonIcon from '@mui/icons-material/Person';
 import SearchIcon from '@mui/icons-material/Search';
 import MenuIcon from '@mui/icons-material/Menu';
+import { useAuthStore } from "@/utils/authStore";
+import { isAuthenticated } from "@/utils/auth";
+
 
 // import { useCart } from "../functions/CartContext";
 // import ReverseGeocodeLocation from "./Location";
 
 
 function Header() {
+    const { user, isLoggedIn } = useAuthStore();
+
+    const handleLogout = () => {
+        
+    }
 
     return (
 
@@ -47,16 +55,16 @@ function Header() {
                                     </li>
                                     
                                     <li>
-                                        {/* {isLoggedIn() ? (
+                                        {isAuthenticated() ? (
                                             <>
                                                 <a className="cursor-pointer" onClick={handleLogout} >Logout</a>
                                             </>
 
                                         ):(
-                                            )} */}
                                         <>
-                                            <Link href="/register" prefetch={false}>Sign in / Sign up</Link>
+                                            <Link href="/register">Sign in / Sign up</Link>
                                         </>
+                                            )}
                                     </li>
                                 </ul>
                             </li>
@@ -73,7 +81,7 @@ function Header() {
                             <MenuIcon fontSize="med"/>
                         </button>
 
-                        <Link href={'/'} prefetch={false} className="logo">
+                        <Link href={'/'} className="logo">
                             <img src="../" alt="Logo" width="105" height="25" />
                         </Link>
                     </div>
@@ -105,11 +113,11 @@ function Header() {
                                     <PersonIcon />
                                     <span className="wishlist-count badge">3</span>
                                 </div>
-                                {/* <p title="Dashboard">
-                                    {userData
-                                        ? `Hello, ${userData.first_name}`
+                                <p title="Dashboard">
+                                    {isAuthenticated()
+                                        ? `Hello, ${user}`
                                         : 'Login!'}
-                                </p> */}
+                                </p>
                             </Link>
                         </div>
 

@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { setAuthUser } from '../../utils/auth';
 import api from '../../utils/api';
+import { useAuthStore } from "@/utils/authStore";
+
 
 export const useAuth = () => {
 
@@ -19,10 +21,12 @@ export const useAuth = () => {
                 email,
                 password,
             });
+            console.log(data)
 
             setStatus(status);
             if (status === 200) {
-                setAuthUser(data.access_token, data.refresh_token);
+                setAuthUser(data.access_token, data.refresh_token, data.first_name);
+                
             } else {
                 setError('Login failed. Please try again.');
             }

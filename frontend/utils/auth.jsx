@@ -10,7 +10,7 @@ import { SERVER_URL } from './constants';
  * @param {string} access_token - The JWT access token.
  * @param {string} refresh_token - The JWT refresh token.
  */
-export const setAuthUser = (access_token, refresh_token) => {
+export const setAuthUser = (access_token, refresh_token, first_name) => {
     try {
         // Set access and refresh tokens in cookies
         Cookies.set("access_token", access_token, { secure: false });
@@ -19,7 +19,7 @@ export const setAuthUser = (access_token, refresh_token) => {
         // Cookies.set("refresh_token", refresh_token, { expires: 7, secure: false });
 
         // Decode access token to get user details
-        const user = jwtDecode(access_token);
+        const user = first_name;
 
         // Update user state in your store
         if (user) useAuthStore.getState().setUser(user);
