@@ -40,8 +40,9 @@ const Login = () => {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = decodeURIComponent(searchParams.get("next") || "/");
+  const redirectTo = searchParams.get("redirect") || "/";
 
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     const response = await login(email, password);
