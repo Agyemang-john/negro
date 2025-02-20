@@ -1,9 +1,12 @@
 'use client';
 
 import React, {useEffect, useState} from 'react';
+import { addToCart, removeFromCart } from '@/lib/cart';
 // import {refreshDetail, truncateText}  from "../../utils/Function";
 import Link from "next/link";
 import ReactImageMagnify from 'react-image-magnify';
+import AddToCartButton from './AddToCartButton';
+
 
 // import QuantityCounter from '../../utils/Quantity';
 // import { addToCart } from '../../utils/CartFunctions';
@@ -48,7 +51,6 @@ import Chip from '@mui/material/Chip';
 import Button from '@mui/material/Button';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import VerifiedIcon from '@mui/icons-material/Verified';
-import zIndex from '@mui/material/styles/zIndex';
 
 
 const NoneProduct = ({ productData }) => {
@@ -64,192 +66,20 @@ const NoneProduct = ({ productData }) => {
 
   // const { cartCount, orderSummary, address, refreshCart } = useCart(); 
     const [quantity, setQuantity] = useState(1);
-    const [variantId, setVariantId] = useState(null); // You can set initial variant if applicable
-    const [productId, setProductId] = useState(2);
     const [isInCart, setIsInCart] = useState(false);
     // const isAuthenticated = useAuthStore.getState().isLoggedIn();
     const isAuthenticated = useState(false);
     const [loading, setLoading] = useState(false); 
     console.log(data);
   
-    // Check cart on mount
-    // useEffect(() => {
-    //   checkCart();
-    // }, [productId, variantId, isAuthenticated]);
   
-    // const checkCart = async () =>  {
-    //   setLoading(true);
-    //   const localCart = JSON.parse(localStorage.getItem('cart')) || [];
-    //   const itemInCart = localCart.find(item => item.productId === productId && item.variantId === variantId);
-  
-    //   if (isAuthenticated) {
-    //     // Check server cart for the product if the user is authenticated
-    //     try {
-    //       const response = await api.get(`/api/cart/check/`, {
-    //         params: {
-    //           product_id: productId,
-    //           variant_id: variantId,
-    //         },
-            
-    //       });
-    
-    //       if (response.data.inCart) {
-    //         setQuantity(response.data.quantity);
-    //         setIsInCart(true);
-            
-    //       }
-    //     } catch (error) {
-    //       console.error("Error checking cart on server:", error);
-    //     }
-    //   } else if (itemInCart) {
-    //     setQuantity(itemInCart.quantity);
-    //     setIsInCart(true);
-    //   }
-    //   setLoading(false);
-    //   // await refreshCart();
-    // };
-  
-    // const handleAddToCart = () => {
-    //   setLoading(true);
-    //   if (isAuthenticated) {
-    //     addToCartOnServer(1); // Default 1 quantity when first added
-    //   } else {
-    //     addToLocalStorage(1);
-    //   }
-    //   setLoading(false);
-    // };
-  
-    // const addToCartOnServer = async (qty) => {
-    //   try {
-    //     // Make the API call to add the item to the server-side cart
-    //     const response = await api.post('/api/cart/add/', {
-    //       product_id: productId,
-    //       variant_id: variantId,
-    //       quantity: qty,
-    //     });
-    
-    //     // Set the item as in the cart if the response is successful
-    //     setIsInCart(true);
-    //     // Optionally, you can log or handle the response here if needed
-    //     console.log('Item added to cart:', response.data);
-    //   } catch (error) {
-    //     // Handle any errors that occur during the API call
-    //     console.error("Error adding to server-side cart:", error);
-    //   }
-    
-    //   // Check the updated cart after the item is added
-    //   await checkCart();
-    //   await refreshCart();
-    // };
-  
-  //   const addToLocalStorage = async (qty) => {
-  //     const cart = JSON.parse(localStorage.getItem('cart')) || [];
-  //     const itemIndex = cart.findIndex(item => item.productId === productId && item.variantId === variantId);
-  
-  //     if (itemIndex !== -1) {
-  //       cart[itemIndex].quantity += qty; // Update existing quantity
-  //     } else {
-  //       cart.push({ productId, variantId, quantity: qty }); // Add new item with quantity
-  //     }
-  
-  //     localStorage.setItem('cart', JSON.stringify(cart));
-  //     setIsInCart(true);
-  
-  //     // Refresh the cart count after updating local storage
-  //     await checkCart();
-  //     await refreshCart();
-  //   };
-    
-  //   const handleIncrease = () => {
-  //     setQuantity(prev => prev + 1);
-
-  //     setLoading(true);
-  
-  //     if (isAuthenticated) {
-  //       addToCartOnServer(1); // Add one more unit to server-side cart
-  //     } else {
-  //       addToLocalStorage(1); // Add one more unit to local storage cart
-  //     }
-  //     refreshCart();
-  //     setLoading(false);
-  //   };
-  
-  //   const handleDecrease = () => {
-  //     if (quantity > 1) {
-  //       setQuantity(prev => prev - 1);
-  
-  //       if (isAuthenticated) {
-  //         addToCartOnServer(-1); // Remove one unit from server-side cart
-  //       } else {
-  //         addToLocalStorage(-1); // Remove one unit from local storage cart
-  //       }
-  //     } else {
-  //       handleRemoveFromCart(); // Remove completely if quantity is 1
-  //     }
-  //     // refreshCart();
-  //   };
-  
-  //   const handleRemoveFromCart = () => {
-  //     setLoading(true);
-  //     if (isAuthenticated) {
-  //       removeFromServer();
-  //     } else {
-  //       removeFromLocalStorage();
-  //     }
-  //     setLoading(false);
-  //     // refreshCart();
-  //   };
-  
-  //   const removeFromServer = async () => {
-  //     try {
-  //       // Make the API call to remove the item from the server-side cart
-  //       const response = await api.post('/api/cart/remove/', {
-  //         product_id: productId,
-  //         variant_id: variantId,
-  //       });
-    
-  //       // If successful, update the state to reflect the removal
-  //       setIsInCart(false);
-  //       setQuantity(0);
-        
-  //       // Optionally, you can log or handle the response here if needed
-  //       console.log('Item removed from cart:', response.data);
-  //     } catch (error) {
-  //       // Handle any errors that occur during the API call
-  //       console.error("Error removing from server-side cart:", error);
-  //     }
-    
-  //     // Optionally, refresh the cart (uncomment if needed)
-  //     await refreshCart();
-  //   };
-  
-  //   const removeFromLocalStorage = async () => {
-  //     const cart = JSON.parse(localStorage.getItem('cart')) || [];
-  //     const updatedCart = cart.filter(item => !(item.productId === productId && item.variantId === variantId));
-  
-  //     // Update localStorage with the modified cart
-  //     localStorage.setItem('cart', JSON.stringify(updatedCart));
-  
-  //     // Update the UI to reflect that the item is no longer in the cart
-  //     setIsInCart(false);
-  //     setQuantity(0);
-  
-  //     // Refresh the cart count after updating local storage
-  //     await checkCart();
-  //     await refreshCart();
-  //   };
-
-
- 
-
-    // Handle Add to Cart button click
-    // const handleAddToCart = () => {
-    //     if (quantity > 0) { // Prevent adding zero or negative quantity
-    //         addToCart(productId, variantId, quantity);
-    //     } else {
-    //         console.warn("Quantity must be greater than 0");
-    //     }
-    // };
+    const handleAddToCart = async(qty) => {
+      setLoading(true);
+      await addToCart(p.id, qty, variantId = null);
+      setQuantity((prev) => prev + qty);
+      setLoading(false);
+      setIsInCart(true);
+    };
 
 
 
@@ -322,27 +152,14 @@ const NoneProduct = ({ productData }) => {
                                 </span>
                             </div>
 
-                            <div className='d-lg-none' style={{ margin: '10px', padding: 0 }}>
-                                <div id="add_to_cart_btn" className="cart-option">
-                                    {!isInCart ? (
-                                        <div id="button_toggle">
-                                            <button disabled={loading} title="Add to shopping Cart" onClick={''} className="cart-btn shadow w-100">
-                                            {loading ? "Loading..." : "Add to Cart"}
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="input-counter">
-                                            <button disabled={loading} className="minus-button shadow-sm text-white" onClick={''}>
-                                                -
-                                            </button>
-                                            <input className="quantity_total_" type="text" min={1} value={quantity} readOnly />
-                                            <button disabled={loading} className="plus-button shadow-sm text-white" onClick={''}>
-                                                +
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                            <>
+                              <AddToCartButton
+                                isInCart={isInCart}
+                                loading={loading}
+                                handleAddToCart={handleAddToCart}
+                                quantity={quantity}
+                              />
+                            </>
 
                             <Accordion
                               sx={{

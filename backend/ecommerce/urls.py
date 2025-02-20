@@ -19,6 +19,7 @@ urlpatterns = [
     path("api/v1/auth/", include("social_accounts.urls")),
     path("api/v1/auth/user/", include("customer.urls")),
     path("api/v1/payments/", include("payments.urls")),
+    path("api/v1/order/", include("order.urls")),
     path("api/v1/address/", include("address.urls")),
     path("vendor/", include("vendor.urls")),
     path("", include("product.urls")),

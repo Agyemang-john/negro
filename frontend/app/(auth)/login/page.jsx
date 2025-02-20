@@ -40,7 +40,10 @@ const Login = () => {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/";
+  // Decode only once to prevent issues
+  const redirectTo = searchParams.get("redirect") 
+  ? decodeURIComponent(searchParams.get("redirect")) 
+  : "/";
 
   
   const handleSubmit = async (e) => {

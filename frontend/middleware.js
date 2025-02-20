@@ -6,9 +6,13 @@ export function middleware(req) {
     const pathname = req.nextUrl.pathname; // Requested route
 
     if (!token) {
-        // Redirect to login with the original route as a query param
+        // Encode pathname once to prevent double encoding
+        const redirectPath = encodeURIComponent(pathname);
+
+        // Redirect to login with original route as a query param
         const loginUrl = new URL('/login', req.url);
-        loginUrl.searchParams.set('redirect', pathname);
+        loginUrl.searchParams.set('redirect', redirectPath);
+
         return NextResponse.redirect(loginUrl);
     }
 
@@ -17,13 +21,15 @@ export function middleware(req) {
         const currentTime = Date.now() / 1000;
 
         if (decoded.exp < currentTime) {
+            const redirectPath = encodeURIComponent(pathname);
             const loginUrl = new URL('/login', req.url);
-            loginUrl.searchParams.set('redirect', pathname);
+            loginUrl.searchParams.set('redirect', redirectPath);
             return NextResponse.redirect(loginUrl); // Redirect if token expired
         }
     } catch (error) {
+        const redirectPath = encodeURIComponent(pathname);
         const loginUrl = new URL('/login', req.url);
-        loginUrl.searchParams.set('redirect', pathname);
+        loginUrl.searchParams.set('redirect', redirectPath);
         return NextResponse.redirect(loginUrl); // Redirect if token is invalid
     }
 
@@ -31,6 +37,5 @@ export function middleware(req) {
 }
 
 export const config = {
-    matcher: ['/dashboard/:path*', '/profile/:path*', '/settings/:path*'], // Protected routes
+    matcher: ['/'], // Protected routes
 };
-

@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link'
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PersonIcon from '@mui/icons-material/Person';
@@ -7,6 +8,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useAuthStore } from "@/utils/authStore";
 import { isAuthenticated } from "@/utils/auth";
+import { getCartQuantity, addToCart, removeFromCart } from '@/lib/cart';
+
 
 
 // import { useCart } from "../functions/CartContext";
@@ -15,6 +18,20 @@ import { isAuthenticated } from "@/utils/auth";
 
 function Header() {
     const { user, isLoggedIn } = useAuthStore();
+    const [cartQuantity, setCartQuantity] = useState(0);
+
+    
+
+    useEffect(() => {
+        // const cartQuantity = getCartQuantity();
+        // Fetch the initial cart quantity when the component mounts
+        const fetchCartQuantity = async () => {
+          const quantity = await getCartQuantity();
+          setCartQuantity(quantity); // Set the initial cart quantity
+        };
+    
+        fetchCartQuantity();
+    }, []);
 
     const handleLogout = () => {
         
@@ -127,7 +144,7 @@ function Header() {
                                     <ShoppingCartIcon/>
                                     <span id="cart_count" className="cart-count">
                                     {/* {cartCount} */}
-                                    0
+                                    {cartQuantity}
                                     </span> {/* Replace with actual cart count */}
                                 </div>
                                 <p>Cart</p>
