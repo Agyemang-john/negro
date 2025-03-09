@@ -1,6 +1,9 @@
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from product.models import *
+from django.contrib.auth.signals import user_logged_in
+from django.http import JsonResponse
+from .models import Cart, CartItem
 
 @receiver(pre_save, sender=ProductDeliveryOption)
 def ensure_one_default(sender, instance, **kwargs):

@@ -22,6 +22,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/page.tsx", "app/[sku]/[slug]/page.jsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/page.tsx", "app/[sku]/[slug]/page.jsx", "redux/store.ts", "components/forms/RegisterForm.jsx", "components/forms/LoginForm.jsx"],
   "exclude": ["node_modules"]
 }

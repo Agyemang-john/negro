@@ -2,17 +2,12 @@ import React, {useEffect, useState} from 'react';
 // import useVariantChange, {refreshDetail, truncateText}  from "../../utils/Function";
 import Link from 'next/link';
 import ReactImageMagnify from 'react-image-magnify';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import AddToCartButton from './AddToCartButton';
 
-// import QuantityCounter from '../../utils/Quantity';
-// import { addToCart } from '../../utils/CartFunctions';
-// import { useAuthStore } from '../../api/authStore';
-// import api from '../../api/api';
-// import { SERVER_URL } from '../../api/constants';
-// import { useCart } from '../../utils/CartContext';
 import Rating from '@mui/material/Rating';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import XIcon from '@mui/icons-material/X';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import FacebookIcon from '@mui/icons-material/Facebook';
@@ -42,30 +37,26 @@ import Chip from '@mui/material/Chip';
 import Button from '@mui/material/Button';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import VerifiedIcon from '@mui/icons-material/Verified';
-import api from '@/utils/api';
 
 const SizeProduct = ({ data, handleFollowToggle, isFollowing }) => {
-  
-  // const { cartCount, orderSummary, address, refreshCart } = useCart(); 
-  const router = useRouter();
-  const { sku, slug } = useParams();
+  const { sku, slug } = useParams(); // Get route params
+   const searchParams = useSearchParams();
+   const router = useRouter();
+
   const [open, setOpen] = useState(false);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
-
-    const [address, setAddress] = useState(null);
-    const [p, setProduct] = useState(data.product);
-    const [mainImage, setMainImage] = useState(data.variant_data.variant.image || null);
-    const [variantimages, setVarImages] = useState(data.variant_data.variant_images);
-    const [quantity, setQuantity] = useState(1);
-    const [isInCart, setIsInCart] = useState(false);
-    const isAuthenticated = useState(false);
-    const [loading, setLoading] = useState(true); 
-    const [productDetail, setProdductDetail] = useState(data.product);
-    const [variantDetail, setvariantDetail] = useState(data.variant_data.variant);
-    const [sizeDetail, setSizeDetail] = useState(data.variant_data.sizes);
-    const [allImages, setAllImages] = useState(data.p_images);
+   
+    const [variantImages, setVariantImages] = useState(data?.variant_data?.variant_images);
+    const [isInCart, setIsInCart] = useState(data?.is_in_cart);
+    const [cartQuantity, setCartQuantity] = useState(data?.cart_quantity);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [productDetail, setProductDetail] = useState(data?.product);
+    const [variantDetail, setVariantDetail] = useState(data?.variant_data?.variant);
+    const [sizeDetail, setSizeDetail] = useState(data?.variant_data?.sizes);
+    const [allImages, setAllImages] = useState(data?.p_images);
+    const [mainImage, setMainImage] = useState(data?.variant_data?.variant?.image);
     const [error, setError] = useState(null);
 
     const [openchart, setOpenChart] = React.useState(false);
@@ -82,26 +73,34 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing }) => {
 
     const fetchProductData = async (variantId) => {
       try {
-        const { data } = await api.get(`/api/v1/product/${sku}/${slug}/`, {
-          params: { variantid: variantId || '' },
-        });
-        setMainImage(data.variant_data.variant.image);
-        setProdductDetail(data.product);
-        setvariantDetail(data.variant_data.variant);
+        const url = new URL(`${process.env.NEXT_PUBLIC_HOST}/api/v1/product/${sku}/${slug}/`);
+        if (variantId) url.searchParams.append("variantid", variantId);
+  
+        const res = await fetch(url, { method: "GET", cache: "no-store", credentials: "include"});
+        const data = await res.json();
+
+        setIsInCart(data?.is_in_cart);
+        setCartQuantity(data?.cart_quantity);
         setSizeDetail(data.variant_data.sizes);
-        setAllImages(data.p_images);
-        console.log("Hellooo: ",{...data})
+        setMainImage(data?.variant_data?.variant?.image);
+        setProductDetail(data?.product);
+        setVariantDetail(data?.variant_data?.variant);
+        setAllImages(data?.p_images);
+        setVariantImages(data?.variant_data?.variant_images);
       } catch (error) {
         console.error('Error fetching product data:', error);
         setError('Failed to load product data');
       }
     };
   
-    const handleVariantChange = async (newVariantId) => {
-      await fetchProductData(newVariantId);
-  
-      // Update the URL without reloading the page
-      router.push(`?variantid=${newVariantId}`, { scroll: false });
+    const handleVariantChange = (newVariantId) => {
+
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set("variantid", newVariantId);
+      router.replace(newUrl.toString(), { scroll: false });
+
+      fetchProductData(newVariantId);
+
     };
 
  
@@ -148,7 +147,7 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing }) => {
                                     <img onClick={() => setMainImage(productDetail.image)} src={`${productDetail.image}`} alt="product side" />
                                 </Link>
 
-                                {variantimages.length === 0 ? (
+                                {variantImages.length === 0 ? (
                                   <>
                                     {allImages && allImages.map((p) => (
                                         <Link href={'#'} key={p.id} className="product-gallery-item">
@@ -158,7 +157,7 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing }) => {
                                   </>
                                 ):(
                                   <>
-                                    {variantimages && variantimages.map((p) => (
+                                    {variantImages && variantImages.map((p) => (
                                       <Link href={'#'} key={p.id} className="product-gallery-item" >
                                             <img onClick={() => setMainImage(p.images)} src={`${p.images}`} alt="product cross" />
                                       </Link>
@@ -209,25 +208,13 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing }) => {
                             </div>
 
                             <div className='d-lg-none' style={{ margin: '10px', padding: 0 }}>
-                                <div id="add_to_cart_btn" className="cart-option">
-                                    {!isInCart ? (
-                                        <div id="button_toggle">
-                                            <button disabled={loading} title="Add to shopping Cart" onClick={''} className="cart-btn shadow w-100">
-                                            {loading ? "Loading..." : "Add to Cart"}
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="input-counter">
-                                            <button disabled={loading} className="minus-button shadow-sm text-white" onClick={''}>
-                                                -
-                                            </button>
-                                            <input className="quantity_total_" type="text" min={1} value={quantity} readOnly />
-                                            <button disabled={loading} className="plus-button shadow-sm text-white" onClick={''}>
-                                                +
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
+                              <AddToCartButton
+                                isInCart={Boolean(isInCart)}
+                                productId={productDetail?.id}
+                                variantId={variantDetail?.id}
+                                quantityInCart={cartQuantity}
+                               
+                              />
                             </div>
 
                             <Accordion
@@ -307,25 +294,13 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing }) => {
           <div className="p-6 mb-6 bg-white shadow-sm rounded-lg">
 
           <div className='d-none d-md-block' style={{ margin: '10px', padding: 0 }}>
-            <div id="add_to_cart_btn" className="cart-option">
-                {!isInCart ? (
-                    <div id="button_toggle">
-                        <button disabled={loading} title="Add to shopping Cart" onClick={''} className="cart-btn shadow w-100">
-                        {loading ? "Loading..." : "Add to Cart"}
-                        </button>
-                    </div>
-                ) : (
-                    <div className="input-counter">
-                        <button disabled={loading} className="minus-button shadow-sm text-white" onClick={''}>
-                            -
-                        </button>
-                        <input className="quantity_total_" type="text" min={1} value={quantity} readOnly />
-                        <button disabled={loading} className="plus-button shadow-sm text-white" onClick={''}>
-                            +
-                        </button>
-                    </div>
-                )}
-            </div>
+            <AddToCartButton
+              isInCart={Boolean(isInCart)}
+              productId={productDetail?.id}
+              variantId={variantDetail?.id}
+              quantityInCart={cartQuantity}
+              
+            />
           </div>
             <Divider />
 

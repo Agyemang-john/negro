@@ -7,18 +7,7 @@ from .views import *
 
 urlpatterns = [
  ############################  VENDOR  ####################
-    path('', account_views.dashboard, name='dashboard'),
-    path('vendor/', views.index, name="index"),
-    path("all/", views.vendor_list_view, name="vendor-list"),
-    path('dashboard/', views.vendor_dashboard, name='vendor-dashboard'),
-    path('profile/', views.vendor_profile, name='vendor_profile'),
-    path('v/products/', views.vendor_product, name='vendor_product'),
-    path('reviews/<slug:slug>/', views.vendor_review, name='vendor_review'),
-    path('operating-hours/', views.operating_hours, name='operating-hours'),
-    path('operating-hours/add/', views.add_operating_hours, name='add-operating-hours'),
-    path('operating-hours/remove/<int:pk>/', views.remove_operating_hours, name='remove-operating-hours'),
-    path("v/add-product/", views.add_product, name="add_product"),
-
+   
     path('register/', VendorSignUpView.as_view(), name='vendor-register'),
     path('detail/', VendorDetailView.as_view(), name='vendor-detail'),
     path('data/', VendorAPIView.as_view(), name='vendor'),

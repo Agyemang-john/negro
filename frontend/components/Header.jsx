@@ -1,41 +1,38 @@
 "use client"
 
+import Image from "next/image";
 import { useEffect, useState } from 'react';
 import Link from 'next/link'
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PersonIcon from '@mui/icons-material/Person';
 import SearchIcon from '@mui/icons-material/Search';
 import MenuIcon from '@mui/icons-material/Menu';
-import { useAuthStore } from "@/utils/authStore";
-import { isAuthenticated } from "@/utils/auth";
-import { getCartQuantity, addToCart, removeFromCart } from '@/lib/cart';
+// import { getCartQuantity, addToCart, removeFromCart } from '@/lib/cart';
+import Grid from '@mui/material/Grid';
+import { useAppSelector, useAppDispatch } from '@/redux/hooks';
+import { useLogoutMutation } from '@/redux/features/authApiSlice';
+import { logout as setLogout } from '@/redux/features/authSlice';
+import { useGetCartQuery } from '@/redux/productApi/cartApiSlice';
 
-
-
-// import { useCart } from "../functions/CartContext";
-// import ReverseGeocodeLocation from "./Location";
 
 
 function Header() {
-    const { user, isLoggedIn } = useAuthStore();
-    const [cartQuantity, setCartQuantity] = useState(0);
+    const { data: cart, isLoading } = useGetCartQuery();
+    const [cartCount, setCartCount] = useState(0);
 
-    
+    const dispatch = useAppDispatch();
 
-    useEffect(() => {
-        // const cartQuantity = getCartQuantity();
-        // Fetch the initial cart quantity when the component mounts
-        const fetchCartQuantity = async () => {
-          const quantity = await getCartQuantity();
-          setCartQuantity(quantity); // Set the initial cart quantity
-        };
-    
-        fetchCartQuantity();
-    }, []);
+	const [logout] = useLogoutMutation();
 
-    const handleLogout = () => {
-        
-    }
+	const { isAuthenticated } = useAppSelector(state => state.auth);
+
+	const handleLogout = () => {
+		logout(undefined)
+			.unwrap()
+			.then(() => {
+				dispatch(setLogout());
+			});
+	};
 
     return (
 
@@ -72,7 +69,7 @@ function Header() {
                                     </li>
                                     
                                     <li>
-                                        {isAuthenticated() ? (
+                                        {isAuthenticated ? (
                                             <>
                                                 <a className="cursor-pointer" onClick={handleLogout} >Logout</a>
                                             </>
@@ -91,7 +88,7 @@ function Header() {
             </div>
 
             <div className="header-middle shadow-sm">
-                <div className="container">
+                <div className="container d-flex justify-content-between">
                     <div className="header-left">
                         <button className="mobile-menu-toggler">
                             <span className="sr-only">Toggle mobile menu</span>
@@ -99,7 +96,7 @@ function Header() {
                         </button>
 
                         <Link href={'/'} className="logo">
-                            <img src="../" alt="Logo" width="105" height="25" />
+                            <Image src="/logo.png" alt="Logo" width={210} height={70} layout="intrinsic"/>
                         </Link>
                     </div>
 
@@ -127,12 +124,12 @@ function Header() {
                         <div className="wishlist">
                             <Link href={'/'} title="Account">
                                 <div className="icon">
-                                    <PersonIcon />
+                                    <PersonIcon fontSize="large"/>
                                     <span className="wishlist-count badge">3</span>
                                 </div>
                                 <p title="Dashboard">
-                                    {isAuthenticated()
-                                        ? `Hello, ${user}`
+                                    {isAuthenticated
+                                        ? `Hello, `
                                         : 'Login!'}
                                 </p>
                             </Link>
@@ -141,10 +138,10 @@ function Header() {
                         <div className="dropdown cart-dropdown">
                             <Link href={'/'} className="dropdown-toggle">
                                 <div className="icon">
-                                    <ShoppingCartIcon/>
+                                    <ShoppingCartIcon fontSize="large"/>
                                     <span id="cart_count" className="cart-count">
                                     {/* {cartCount} */}
-                                    {cartQuantity}
+                                    {isLoading ? '...' : cart?.quantity || 0}
                                     </span> {/* Replace with actual cart count */}
                                 </div>
                                 <p>Cart</p>

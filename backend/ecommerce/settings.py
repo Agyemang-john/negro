@@ -20,7 +20,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = ['*','192.168.56.89', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -34,11 +34,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
+    'rest_framework',
+    "djoser",
     'core',
     'social_accounts',
-    'rest_framework',
-    'rest_framework_simplejwt',
-    'corsheaders',
     'rest_framework_simplejwt.token_blacklist',
     'userauths',
     'product',
@@ -51,92 +51,16 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'order.middleware.CartIDMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-# MIDDLEWARE += [
-#     'django.middleware.cache.UpdateCacheMiddleware',
-#     'django.middleware.cache.FetchFromCacheMiddleware',
-# ]
-
-# CACHE_MIDDLEWARE_SECONDS = 600
-# CACHE_MIDDLEWARE_ALIAS = 'default'
-
-
-
-SESSION_COOKIE_AGE = 3600  # 2 weeks
-CORS_ALLOW_CREDENTIALS = True
-
-CORS_ALLOW_ALL_ORIGINS = True
-# CORS_ALLOWED_ORIGINS = [
-#     'http://localhost:5173',  # Your React frontend
-#     'http://localhost:3000',  # Your React frontend
-#     'http://172.27.192.1:3000',
-# ]
-
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '4000/day',
-        'user': '1000/day',
-    }
-}
-
-from datetime import timedelta
-
-SIMPLE_JWT = {
-    # Access Token Lifetime - 1 hour to balance security and UX
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
-    
-    # Refresh Token Lifetime - 60 days, for long-term sessions
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=60),
-    
-    # Enable token rotation for better security
-    'ROTATE_REFRESH_TOKENS': True,
-    
-    # Blacklist old refresh tokens after they are rotated
-    'BLACKLIST_AFTER_ROTATION': True,
-    
-    # Algorithm for signing the JWT
-    'ALGORITHM': 'HS256',
-    
-    # HTTP Header for token authorization
-    'AUTH_HEADER_TYPES': ('Bearer',),
-
-    
-    # Enabling sliding token lifetimes for smoother sessions
-    'SLIDING_TOKEN_LIFETIME': timedelta(hours=1),  # Sliding token lifetime 1 hour
-    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=60),  # Refresh token sliding window
-    
-    # Token user class (use custom user model if required)
-    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
-    
-    # Enable JTI claim for each token (JWT ID)
-    'JTI_CLAIM': 'jti',
-
-    # Security leeway for potential timing discrepancies
-    'LEEWAY': 30,  # Allow a 30-second leeway for clock discrepancies
-}
-
-
-GOOGLE_CLIENT_ID = env('GOOGLE_CLIENT_ID')
-GOOGLE_CLIENT_SECRET_ID = env('GOOGLE_CLIENT_SECRET_ID')
-SOCIAL_AUTH_PASSWORD = env('SOCIAL_AUTH_PASSWORD')
-
-# GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
-# GOOGLE_CLIENT_SECRET_ID = os.getenv('GOOGLE_CLIENT_SECRET_ID')
-# SOCIAL_AUTH_PASSWORD = os.getenv('SOCIAL_AUTH_PASSWORD')
 
 
 ROOT_URLCONF = 'ecommerce.urls'
@@ -186,6 +110,28 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'userauths.authentication.CustomJWTAuthentication',
+    ],
+
+    # 'DEFAULT_PERMISSION_CLASSES': [
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ],
+
+    # 'DEFAULT_THROTTLE_RATES': {
+    #     'anon': '4000/day',
+    #     'user': '1000/day',
+    # }
+}
+
+
+
+GOOGLE_CLIENT_ID = env('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET_ID = env('GOOGLE_CLIENT_SECRET_ID')
+SOCIAL_AUTH_PASSWORD = env('SOCIAL_AUTH_PASSWORD')
 
 
 # Password validation
@@ -253,6 +199,9 @@ PAYSTACK_SECRET_KEY = "sk_test_08697652e07898b20f337875bdd241b668a2abaa"
 PAYSTACK_PUBLIC_KEY = "pk_test_1a9405c84346cd5f9b41a65524aa546d859be3d0"
 ######################################
 
+SITE_NAME="NegroMart"
+DOMAIN = "http://localhost:3000"
+
 # Emailing settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
@@ -262,11 +211,10 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 
-# SESSION_ENGINE = 'django.contrib.sessions.backends.cache'  # Use the cache backend
-
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 # SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 SESSION_CACHE_ALIAS = 'default'
+# SESSION_SAVE_EVERY_REQUEST = True 
 
 CACHES = {
     'default': {
@@ -280,13 +228,29 @@ CACHES = {
     }
 }
 
-# Celery settings
-# CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Using Redis as broker
-# CELERY_ACCEPT_CONTENT = ['json']
-# CELERY_TASK_SERIALIZER = 'json'
-# # CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
-# CELERY_TIMEZONE = 'UTC'
+# CELERY_BROKER_URL = 'redis://localhost:6379/0'
+# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 
+DJOSER = {
+    'PASSWORD_RESET_CONFIRM_URL': 'password-reset/{uid}/{token}',
+    'SEND_ACTIVATION_EMAIL': True,
+    'ACTIVATION_URL': 'activation/{uid}/{token}',
+    'USER_CREATE_PASSWORD_RETYPE': True,
+    'PASSWORD_RESET_CONFIRM_RETYPE': True,
+    'TOKEN_MODEL': None,
+    'SOCIAL_AUTH_ALLOWED_REDIRECT_URIS': env('REDIRECT_URLS').split(',')
+}
+
+
+AUTH_COOKIE = 'access'
+AUTH_COOKIE_MAX_AGE = 60 * 60 * 24
+AUTH_COOKIE_SECURE = False
+AUTH_COOKIE_HTTP_ONLY = True
+AUTH_COOKIE_PATH = '/'
+AUTH_COOKIE_SAMESITE = 'Lax'
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Next.js frontend URL
+]

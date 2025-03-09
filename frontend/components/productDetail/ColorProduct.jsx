@@ -5,11 +5,8 @@ import React, {useEffect, useState} from 'react'
 import Link from 'next/link';
 import ReactImageMagnify from 'react-image-magnify';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import AddToCartButton from './AddToCartButton';
 
-// import QuantityCounter from '../../utils/Quantity';
-// import { addToCart } from '../../utils/CartFunctions';
-// import { useAuthStore } from '../../api/authStore';
-// import { useCart } from '../../utils/CartContext';
 import Rating from '@mui/material/Rating';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
@@ -33,275 +30,70 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import VerifiedIcon from '@mui/icons-material/Verified';
-import api from '@/utils/api';
+import Drawer from '@mui/material/Drawer'
 
 
 const ColorProduct = ({ productData }) => {
+  const { sku, slug } = useParams(); // Get route params
+  const searchParams = useSearchParams();
   const router = useRouter();
-  const { sku, slug } = useParams();
   const [open, setOpen] = useState(false);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  // const handleVariantChange = useVariantChange(p.slug, p.id, p.sub_category.slug);
-  const [address, setAddress] = useState(null);
-  const [isFollowing, setFollowing] = useState(productData.is_following);
+    const [address, setAddress] = useState(null);
+    const [isFollowing, setFollowing] = useState(productData?.is_following);
 
-  const [variantimages, setVarImages] = useState(productData.variant_data.variant_images);
-  const [quantity, setQuantity] = useState(1);
-    // const [variantId, setVariantId] = useState(variant.id); // You can set initial variant if applicable
-    // const [productId, setProductId] = useState(p.id);
-    const [isInCart, setIsInCart] = useState(false);
-    const isAuthenticated = useState(false);
-    const [loading, setLoading] = useState(true); 
-    const [p, setProduct] = useState(productData.product);
-    const [mainImage, setMainImage] = useState(productData.variant_data.variant.image || null);
-
-    const [productDetail, setProdductDetail] = useState(productData.product);
-    const [variantDetail, setvariantDetail] = useState(productData.variant_data.variant);
-    const [colorDetail, setcolorDetail] = useState(productData.variant_data.colors);
-
-    const [allImages, setAllImages] = useState(productData.p_images);
+    const [variantImages, setVariantImages] = useState(productData?.variant_data?.variant_images);
+    const [isInCart, setIsInCart] = useState(productData?.is_in_cart);
+    const [cartQuantity, setCartQuantity] = useState(productData?.cart_quantity);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [productDetail, setProductDetail] = useState(productData?.product);
+    const [variantDetail, setVariantDetail] = useState(productData?.variant_data?.variant);
+    const [colorDetail, setColorDetail] = useState(productData?.variant_data?.colors);
+    const [allImages, setAllImages] = useState(productData?.p_images);
+    const [mainImage, setMainImage] = useState(productData?.variant_data?.variant?.image);
     const [error, setError] = useState(null);
     
 
     const fetchProductData = async (variantId) => {
       try {
-        const { data } = await api.get(`/api/v1/product/${sku}/${slug}/`, {
-          params: { variantid: variantId || '' },
-        });
-        setMainImage(data.variant_data.variant.image);
-        setProdductDetail(data.product);
-        setvariantDetail(data.variant_data.variant);
-        setcolorDetail(data.variant_data.colors);
-        setAllImages(data.p_images);
-        setVarImages(data.variant_data.variant_images);
-        console.log("Hellooo: ",{...data})
+        const url = new URL(`${process.env.NEXT_PUBLIC_HOST}/api/v1/product/${sku}/${slug}/`);
+        if (variantId) url.searchParams.append("variantid", variantId);
+  
+        const res = await fetch(url, { method: "GET", cache: "no-store", credentials: "include"});
+        const data = await res.json();
+  
+        // Update State with New Data
+        setIsInCart(data?.is_in_cart);
+        setCartQuantity(data?.cart_quantity);
+        setMainImage(data?.variant_data?.variant?.image);
+        setProductDetail(data?.product);
+        setVariantDetail(data?.variant_data?.variant);
+        setColorDetail(data?.variant_data?.colors);
+        setAllImages(data?.p_images);
+        setVariantImages(data?.variant_data?.variant_images);
       } catch (error) {
-        console.error('Error fetching product data:', error);
-        setError('Failed to load product data');
+        console.error("Error fetching product data:", error);
+        setError("Failed to load product data");
       }
     };
   
-    const handleVariantChange = async (newVariantId) => {
-      await fetchProductData(newVariantId);
-  
-      // Update the URL without reloading the page
-      router.push(`?variantid=${newVariantId}`, { scroll: false });
+    const handleVariantChange = (newVariantId) => {
+
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set("variantid", newVariantId);
+      router.replace(newUrl.toString(), { scroll: false });
+
+      fetchProductData(newVariantId);
+
     };
-
-    const handleImageClick = async (v) => {
-      console.log(v)
-    
-      await handleVariantChange(v);
-    
-      setLoading(false);
+  
+    // Function to Handle Image Click
+    const handleImageClick = (variantId) => {
+      handleVariantChange(variantId);
     };
-
-
-  
-    // // Check cart on mount
-    // useEffect(() => {
-    //   checkCart();
-    // }, [ isAuthenticated]);
-  
-    // const checkCart = async () => {
-    //   try {
-    //     setLoading(true);
-    //     const localCart = JSON.parse(localStorage.getItem('cart')) || [];
-    
-    //     // Find item in local cart for guest users
-    //     const itemInLocalCart = localCart.find(
-    //       item => item.productId === productId && item.variantId === variantId
-    //     );
-    
-    //     // If the user is authenticated, check the server cart
-    //     if (isAuthenticated) {
-    //       const serverCartResponse = await checkServerCart(productId, variantId);
-    //       await handleServerCartResponse(serverCartResponse);
-    //     } 
-    //     // For guest users, handle the local cart check
-    //     else if (itemInLocalCart) {
-    //       setQuantity(itemInLocalCart.quantity);
-    //       setIsInCart(true);
-    //     } else {
-    //       setIsInCart(false);
-    //     }
-    //   } catch (error) {
-    //     console.error("Error checking cart:", error);
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
-    
-    // // Helper to check the cart on the server
-    // const checkServerCart = async (productId, variantId) => {
-    //   try {
-    //     const response = await api.get(`/api/cart/check/`, {
-    //       params: { product_id: productId, variant_id: variantId }
-    //     });
-    //     return response.data;
-    //   } catch (error) {
-    //     console.error("Error checking cart on server:", error);
-    //     throw error;
-    //   }
-    // };
-    
-    // // Handle server response and update the cart state accordingly
-    // const handleServerCartResponse = async (response) => {
-    //   if (response.inCart) {
-    //     setQuantity(response.quantity);
-    //     setIsInCart(true);
-    //   } else {
-    //     setIsInCart(false);
-    //   }
-    // };
-
-    // const handleVariantChange = async (newVariantId) => {
-    //   try {
-    //     // Send a GET request to the server to fetch the product data based on the selected variant
-    //     const response = await api.get(`/api/product/${slug}/${id}/${subCategorySlug}/`, {
-    //       params: { variantid: newVariantId || '' },
-    //     });
-
-    //     setVariantId(newVariantId);
-    //     setProdductDetial(response.data.product);
-    //     setAllImages(response.data.p_images);
-    //     setvariantDetial(response.data.variant_data.variant);
-    //     setcolorDetial(response.data.variant_data.colors);
-    //     setVarImages(response.data.variant_data.variant_images);
-    //     // Get the current URL and its search parameters
-    //     const currentUrl = new URL(window.location.href); // Create a URL object from the current URL
-    //     const searchParams = currentUrl.searchParams; // Get the search params object
-
-    //     // Update the variantid parameter in the URL
-    //     searchParams.set('variantid', newVariantId);
-    //     // Use window.history.replaceState to update the URL without causing a page refresh
-    //     window.history.replaceState(null, '', `${currentUrl.pathname}?${searchParams.toString()}`);
-    //   } catch (error) {
-    //     // Handle any errors that occur during the request
-    //     setError('Error fetching product data');    
-    //   } 
-    // };
-  
-    // const handleAddToCart = async () => {
-    //   setLoading(true);
-    //   if (isAuthenticated) {
-    //     await addToCartOnServer(1); // Default 1 quantity when first added
-    //   } else {
-    //     await addToLocalStorage(1);
-    //   }
-    //   await checkCart();
-    //   setLoading(false);
-    // };
-  
-    // const addToCartOnServer = async (qty) => {
-    //   try {
-    //     // Make the API call to add the item to the server-side cart
-    //     const response = await api.post('/api/cart/add/', {
-    //       product_id: productId,
-    //       variant_id: variantId,
-    //       quantity: qty,
-    //     });
-    
-    //     // Set the item as in the cart if the response is successful
-    //     setIsInCart(true);
-    //     // Optionally, you can log or handle the response here if needed
-    //     console.log('Item added to cart:', response.data);
-    //   } catch (error) {
-    //     // Handle any errors that occur during the API call
-    //     console.error("Error adding to server-side cart:", error);
-    //   }
-    //   await refreshCart();
-    // };
-  
-    // const addToLocalStorage = async (qty) => {
-    //   const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    //   const itemIndex = cart.findIndex(item => item.productId === productId && item.variantId === variantId);
-  
-    //   if (itemIndex !== -1) {
-    //     cart[itemIndex].quantity += qty; // Update existing quantity
-    //   } else {
-    //     cart.push({ productId, variantId, quantity: qty }); // Add new item with quantity
-    //   }
-  
-    //   localStorage.setItem('cart', JSON.stringify(cart));
-    //   setIsInCart(true);
-    //   // Refresh the cart count after updating local storage
-    //   await refreshCart();
-    // };
-    
-    // const handleIncrease = async  () => {
-    //   setQuantity(prev => prev + 1);
-    //   setLoading(true);
-    //   if (isAuthenticated) {
-    //     await addToCartOnServer(1); // Add one more unit to server-side cart
-    //   } else {
-    //     await addToLocalStorage(1); // Add one more unit to local storage cart
-    //   }
-    //   refreshCart();
-    //   setLoading(false);
-    // };
-  
-    // const handleDecrease = async  () => {
-    //   if (quantity > 1) {
-    //     setQuantity(prev => prev - 1);
-  
-    //     if (isAuthenticated) {
-    //       await addToCartOnServer(-1); // Remove one unit from server-side cart
-    //     } else {
-    //       await addToLocalStorage(-1); // Remove one unit from local storage cart
-    //     }
-    //   } else {
-    //     await handleRemoveFromCart(); // Remove completely if quantity is 1
-    //   }
-    //   // refreshCart();
-    // };
-  
-    // const handleRemoveFromCart = async () => {
-    //   setLoading(true);
-    //   if (isAuthenticated) {
-    //     removeFromServer();
-    //   } else {
-    //     removeFromLocalStorage();
-    //   }
-    //   await checkCart();
-    //   await refreshCart();
-    //   setLoading(false);
-    // };
-  
-    // const removeFromServer = async () => {
-    //   try {
-    //     // Make the API call to remove the item from the server-side cart
-    //     const response = await api.post('/api/cart/remove/', {
-    //       product_id: productId,
-    //       variant_id: variantId,
-    //     });
-    
-    //     // If successful, update the state to reflect the removal
-    //     setIsInCart(false);
-    //     setQuantity(0);
-    //   } catch (error) {
-    //     // Handle any errors that occur during the API call
-    //     console.error("Error removing from server-side cart:", error);
-    //   }
-    // };
-  
-    // const removeFromLocalStorage = async () => {
-    //   const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    //   const updatedCart = cart.filter(item => !(item.productId === productId && item.variantId === variantId));
-    //   // Update localStorage with the modified cart
-    //   localStorage.setItem('cart', JSON.stringify(updatedCart));
-    //   // Update the UI to reflect that the item is no longer in the cart
-    //   setIsInCart(false);
-    //   setQuantity(0);
-    // };
-
-
-
-  const isVariant = productDetail && colorDetail;
-
 
 
   return (
@@ -344,7 +136,7 @@ const ColorProduct = ({ productData }) => {
                                 </Link>
                                   
 
-                                {!variantimages ? (
+                                {!variantImages ? (
                                   <>
                                     {allImages.map((p) => (
                                         <Link href={'#'} key={p.id} className="product-gallery-item" >
@@ -354,7 +146,7 @@ const ColorProduct = ({ productData }) => {
                                   </>
                                 ):(
                                   <>
-                                    {variantimages && variantimages.map((p) => (
+                                    {variantImages && variantImages.map((p) => (
                                       <Link href={'#'} key={p.id} className="product-gallery-item" >
                                             <img onClick={() => setMainImage(p.images)} src={`${p.images}`} alt="product cross" />
                                       </Link>
@@ -406,25 +198,13 @@ const ColorProduct = ({ productData }) => {
                             </div>
 
                             <div className='d-lg-none' style={{ margin: '10px', padding: 0 }}>
-                                <div id="add_to_cart_btn" className="cart-option">
-                                    {!isInCart ? (
-                                        <div id="button_toggle">
-                                            <button disabled={loading} title="Add to shopping Cart" onClick={''} className="cart-btn shadow w-100">
-                                            {loading ? "Loading..." : "Add to Cart"}
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="input-counter">
-                                            <button disabled={loading} className="minus-button shadow-sm text-white" onClick={''}>
-                                                -
-                                            </button>
-                                            <input className="quantity_total_" type="text" min={1} value={quantity} readOnly />
-                                            <button disabled={loading} className="plus-button shadow-sm text-white" onClick={''}>
-                                                +
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
+                              <AddToCartButton
+                                isInCart={Boolean(isInCart)}
+                                productId={productDetail?.id}
+                                variantId={variantDetail?.id}
+                                quantityInCart={cartQuantity}
+                               
+                              />
                             </div>
 
                             <div className="product-details-footer details-footer-col">
@@ -453,25 +233,15 @@ const ColorProduct = ({ productData }) => {
           <div className="p-6 mb-6 bg-white shadow-sm rounded-lg">
 
           <div className='d-none d-md-block' style={{ margin: '10px', padding: 0 }}>
-            <div id="add_to_cart_btn" className="cart-option">
-                {!isInCart ? (
-                    <div id="button_toggle">
-                        <button disabled={loading} title="Add to shopping Cart" onClick={''} className="cart-btn shadow w-100">
-                        {loading ? "Loading..." : "Add to Cart"}
-                        </button>
-                    </div>
-                ) : (
-                    <div className="input-counter">
-                        <button disabled={loading} className="minus-button shadow-sm text-white" onClick={''}>
-                            -
-                        </button>
-                        <input className="quantity_total_" type="text" min={1} value={quantity} readOnly />
-                        <button disabled={loading} className="plus-button shadow-sm text-white" onClick={''}>
-                            +
-                        </button>
-                    </div>
-                )}
-            </div>
+          <>
+            <AddToCartButton
+              isInCart={Boolean(isInCart)}
+              productId={productDetail?.id}
+              variantId={variantDetail?.id}
+              quantityInCart={cartQuantity}
+              
+            />
+          </>
           </div>
             <Divider />
 
@@ -519,12 +289,12 @@ const ColorProduct = ({ productData }) => {
                 {/* Seller Info */}
                 <Box>
                   <Typography variant="h6" component="div" gutterBottom>
-                    Sold by: <strong>{p.vendor.name} {p.vendor.is_subscribed ? (<VerifiedIcon fontSize='large' color='info'/>): ''}  </strong>
+                    Sold by: <strong>{productDetail.vendor.name} {productDetail.vendor.is_subscribed ? (<VerifiedIcon fontSize='large' color='info'/>): ''}  </strong>
                   {/* Verified badge */}
                   </Typography>
                   
                   {/* Link to seller info */}
-                  <Link href={`/seller/${p.vendor.slug}`} underline="hover" color="info" variant="body2">
+                  <Link href={`/seller/${productDetail.vendor.slug}`} underline="hover" color="info" variant="body2">
                     View Seller Info
                   </Link>
                 </Box>

@@ -13,11 +13,13 @@ static_urlpatterns = [
 urlpatterns = [
     # path('admin/', include('admin_honeypot.urls', namespace='admin_honeypot')),
     path('secret/', admin.site.urls),
+    path("api/", include("djoser.urls")),
+    path("api/", include("userauths.urls")),
+    
     path("api/", include("core.urls")),
-    path("api/v1/auth/", include("userauths.urls")),
+    path("api/v1/auth/user/", include("customer.urls")),
     path("api/v1/product/", include("product.urls")),
     path("api/v1/auth/", include("social_accounts.urls")),
-    path("api/v1/auth/user/", include("customer.urls")),
     path("api/v1/payments/", include("payments.urls")),
     path("api/v1/order/", include("order.urls")),
     path("api/v1/address/", include("address.urls")),

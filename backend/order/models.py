@@ -26,14 +26,18 @@ class Cart(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Cart ({'User: ' + str(self.user.email) if self.user.email else 'Session: ' + self.session_id})"
+        if self.user and self.user.email:
+            return f"Cart (User: {self.user.email})"
+        elif self.session_id:
+            return f"Cart (Session: {self.session_id})"
+        return "Cart (Guest)"
     
     @property
     def total_quantity(self):
         """
         Calculate the total quantity of all items in the cart.
         """
-        return sum(item.quantity for item in self.cart_items.all())
+        return sum(item.quantity for item in self.cart_items.all()) if hasattr(self, 'cart_items') else 0
 
     @property
     def total_price(self):

@@ -3,9 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Card, CardMedia, CardContent, Typography, Skeleton } from '@mui/material';
 import Grid from '@mui/material/Grid2';
-import api from '../../utils/api';
-
-import Link from 'next/link'
+import Link from 'next/link';
 
 function truncateText(text, length) {
   return text.length > length ? `${text.substring(0, length)}...` : text;
@@ -18,12 +16,10 @@ export default function HomeBrowsingHistory() {
   useEffect(() => {
     async function fetchBrowsingHistory() {
       try {
-        const response = await api.get(`/api/viewed-products/`, {
-          headers: {
-            'Cache-Control': 'no-store', // Avoid caching for dynamic content
-          },
+        const response = await fetch(`${process.env.NEXT_PUBLIC_HOST}/api/viewed-products/`, {
+          cache: "no-store", // Avoid caching for dynamic content
         });
-        setProducts(response.data.recently_viewed);
+        setProducts(response.data.recently_viewed || []);
       } catch (error) {
         // console.error('Failed to fetch browsing history:', error);
       } finally {

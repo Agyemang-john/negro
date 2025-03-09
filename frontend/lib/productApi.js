@@ -1,4 +1,3 @@
-import api from "../utils/api"; // Import your Axios instance
 
 export async function fetchProductData(sku, slug, variantId = null) {
     try {
@@ -6,12 +5,11 @@ export async function fetchProductData(sku, slug, variantId = null) {
         if (variantId) {
           url += `?variantid=${variantId}`;
         }
-        const response = await api.get(url, {
-            headers: {
-              "Cache-Control": "no-store", // Avoid caching for dynamic content
-            },
-          });
-        return response.data;
+        const res = await fetch(url, { cache: "no-store", credentials: "include" }); // No cache for dynamic content
+        if (!res.ok) throw new Error("Failed to fetch product");
+
+        const data = await res.json();
+        return data;
     } catch (error) {
         console.error("Error fetching product data:", error);
         return null; // Handle errors gracefully

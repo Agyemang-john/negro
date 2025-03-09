@@ -1,19 +1,12 @@
 'use client';
 
 import React, {useEffect, useState} from 'react';
-import { addToCart, removeFromCart } from '@/lib/cart';
+// import { addToCart, removeFromCart } from '@/lib/cart';
 // import {refreshDetail, truncateText}  from "../../utils/Function";
 import Link from "next/link";
 import ReactImageMagnify from 'react-image-magnify';
 import AddToCartButton from './AddToCartButton';
 
-
-// import QuantityCounter from '../../utils/Quantity';
-// import { addToCart } from '../../utils/CartFunctions';
-// import { useAuthStore } from '../../api/authStore';
-// import api from '../../api/api';
-// import { SERVER_URL } from '../../api/constants';
-// import { useCart } from '../../utils/CartContext';
 import Rating from '@mui/material/Rating';
 import XIcon from '@mui/icons-material/X';
 import InstagramIcon from '@mui/icons-material/Instagram';
@@ -55,6 +48,8 @@ import VerifiedIcon from '@mui/icons-material/Verified';
 
 const NoneProduct = ({ productData }) => {
   const [data, setData] = useState(productData);
+  const [isInCart, setIsInCart] = useState(productData.is_in_cart);
+  const [cartQuantity, setCartQuantity] = useState(productData.cart_quantity);
   const [p, setProduct] = useState(productData.product);
   const [mainImage, setMainImage] = useState(productData.product.image || null);
   const [isFollowing, setFollowing] = useState(productData.is_following);
@@ -66,21 +61,10 @@ const NoneProduct = ({ productData }) => {
 
   // const { cartCount, orderSummary, address, refreshCart } = useCart(); 
     const [quantity, setQuantity] = useState(1);
-    const [isInCart, setIsInCart] = useState(false);
     // const isAuthenticated = useAuthStore.getState().isLoggedIn();
     const isAuthenticated = useState(false);
     const [loading, setLoading] = useState(false); 
     console.log(data);
-  
-  
-    const handleAddToCart = async(qty) => {
-      setLoading(true);
-      await addToCart(p.id, qty, variantId = null);
-      setQuantity((prev) => prev + qty);
-      setLoading(false);
-      setIsInCart(true);
-    };
-
 
 
   return (
@@ -152,14 +136,15 @@ const NoneProduct = ({ productData }) => {
                                 </span>
                             </div>
 
-                            <>
+                            <div className='d-lg-none' style={{ margin: '10px', padding: 0 }}>
                               <AddToCartButton
-                                isInCart={isInCart}
-                                loading={loading}
-                                handleAddToCart={handleAddToCart}
-                                quantity={quantity}
+                                isInCart={Boolean(isInCart)}
+                                productId={p?.id}
+                                variantId={null}
+                                quantityInCart={cartQuantity}
+                               
                               />
-                            </>
+                            </div>
 
                             <Accordion
                               sx={{
@@ -247,25 +232,15 @@ const NoneProduct = ({ productData }) => {
           <div className="p-6 mb-6 bg-white shadow-sm rounded-lg">
 
           <div className='d-none d-md-block' style={{ margin: '10px', padding: 0 }}>
-            <div id="add_to_cart_btn" className="cart-option">
-                {!isInCart ? (
-                    <div id="button_toggle">
-                        <button disabled={loading} title="Add to shopping Cart" onClick={''} className="cart-btn shadow w-100">
-                        {loading ? "Loading..." : "Add to Cart"}
-                        </button>
-                    </div>
-                ) : (
-                    <div className="input-counter">
-                        <button disabled={loading} className="minus-button shadow-sm text-white" onClick={''}>
-                            -
-                        </button>
-                        <input className="quantity_total_" type="text" min={1} value={quantity} readOnly />
-                        <button disabled={loading} className="plus-button shadow-sm text-white" onClick={''}>
-                            +
-                        </button>
-                    </div>
-                )}
-            </div>
+          <>
+            <AddToCartButton
+              isInCart={Boolean(isInCart)}
+              productId={p?.id}
+              variantId={null}
+              quantityInCart={cartQuantity}
+              
+            />
+          </>
           </div>
             <Divider />
 

@@ -3,15 +3,10 @@
 import React, {useEffect, useState} from 'react';
 import Link from 'next/link';
 import ReactImageMagnify from 'react-image-magnify';
+import AddToCartButton from './AddToCartButton';
+
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 
-// import { Link } from 'react-router-dom';
-// import { useAuthStore } from '../../api/authStore';
-import api from '@/utils/api';
-
-// import { SERVER_URL } from '../../api/constants';
-// import { useCart } from '../../utils/CartContext';
-// import { refreshDetail, truncateText } from '../../utils/Function';
 import Rating from '@mui/material/Rating';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
@@ -47,31 +42,28 @@ import WhereToVoteIcon from '@mui/icons-material/WhereToVote';
 
 
 const SizeColorProduct = ({ productData }) => {
-  // const { cartCount, orderSummary, address, refreshCart } = useCart(); 
-  const router = useRouter();
-    const { sku, slug } = useParams();
-  const [open, setOpen] = useState(false);
-  const [isFollowing, setFollowing] = useState(productData.is_following);
+    const { sku, slug } = useParams(); // Get route params
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const [open, setOpen] = useState(false);
+    const [isFollowing, setFollowing] = useState(productData.is_following);
 
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
 
-  const [address, setAddress] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  // const [variantId, setVariantId] = useState(variant.id);
-  const [isInCart, setIsInCart] = useState(false);
-  const isAuthenticated = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [activeId, setActiveId] = useState(null);
-  const [p, setProduct] = useState(productData.product);
-  const [mainImage, setMainImage] = useState(productData.variant_data.variant.image || null);
+      const [address, setAddress] = useState(null);
+      const [loading, setLoading] = useState(true);
 
-  const [productDetail, setProdductDetail] = useState(productData.product);
-  const [variantDetail, setvariantDetail] = useState(productData.variant_data.variant);
-  const [sizeDetail, setSizeDetail] = useState(productData.variant_data.sizes);
-  const [colorDetail, setcolorDetail] = useState(productData.variant_data.colors);
-  const [allImages, setAllImages] = useState(productData.p_images);
-  const [variantimages, setVarImages] = useState(productData.variant_data.variant_images);
+    const [variantImages, setVariantImages] = useState(productData?.variant_data?.variant_images);
+    const [isInCart, setIsInCart] = useState(productData?.is_in_cart);
+    const [cartQuantity, setCartQuantity] = useState(productData?.cart_quantity);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [productDetail, setProductDetail] = useState(productData?.product);
+    const [variantDetail, setVariantDetail] = useState(productData?.variant_data?.variant);
+    const [colorDetail, setColorDetail] = useState(productData?.variant_data?.colors);
+    const [sizeDetail, setSizeDetail] = useState(productData?.variant_data?.sizes);
+    const [allImages, setAllImages] = useState(productData?.p_images);
+    const [mainImage, setMainImage] = useState(productData?.variant_data?.variant?.image);
 
 
   const [openchart, setOpenChart] = React.useState(false);
@@ -88,13 +80,21 @@ const SizeColorProduct = ({ productData }) => {
 
     const handleSizeChange = async (event) => {
       const selectedSizeId = event.target.value;
-
       try {
-        const { data } = await api.post('/api/v1/product/ajaxcolor/', {
-          size: selectedSizeId,
-          productid: productData.product.id,
+        const res = await fetch(`${process.env.NEXT_PUBLIC_HOST}/api/v1/product/ajaxcolor/`, {
+          method: "POST", // Set the request method to POST
+          credentials: "include", // Include the credentials
+          cache: "no-store",
+          headers: {
+            "Content-Type": "application/json", // Specify JSON data
+          },
+          body: JSON.stringify({
+            size: selectedSizeId,
+            productid: productDetail?.id,
+          }),
         });
-        setcolorDetail(data.colors);
+        const data = await res.json();
+        setColorDetail(data?.colors);
       } catch (error) {
         console.error('Error:', error);
       }
@@ -102,40 +102,41 @@ const SizeColorProduct = ({ productData }) => {
 
     const fetchProductData = async (variantId) => {
       try {
-        const { data } = await api.get(`/api/v1/product/${sku}/${slug}/`, {
-          params: { variantid: variantId || '' },
-        });
-        setMainImage(data.variant_data.variant.image);
-        setProdductDetail(data.product);
-        setvariantDetail(data.variant_data.variant);
-        setSizeDetail(data.variant_data.sizes);
-        setAllImages(data.p_images);
-        setVarImages(productData.variant_data.variant_images);
-        console.log("Hellooo: ",{...data})
+        const url = new URL(`${process.env.NEXT_PUBLIC_HOST}/api/v1/product/${sku}/${slug}/`);
+        if (variantId) url.searchParams.append("variantid", variantId);
+  
+        const res = await fetch(url, { method: "GET", cache: "no-store", credentials: "include"});
+        const data = await res.json();
+
+        setIsInCart(data?.is_in_cart);
+        setCartQuantity(data?.cart_quantity);
+        setSizeDetail(data?.variant_data.sizes);
+        setAllImages(data?.p_images);
+        setMainImage(data?.variant_data?.variant?.image);
+        setProductDetail(data?.product);
+        setVariantDetail(data?.variant_data?.variant);
+        setColorDetail(data?.variant_data?.colors);
+        setVariantImages(data?.variant_data?.variant_images);
+        console.log(data)
       } catch (error) {
         console.error('Error fetching product data:', error);
         setError('Failed to load product data');
       }
     };
   
-    const handleVariantChange = async (newVariantId) => {
-      await fetchProductData(newVariantId);
-  
-      // Update the URL without reloading the page
-      router.push(`?variantid=${newVariantId}`, { scroll: false });
+    const handleVariantChange = (newVariantId) => {
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set("variantid", newVariantId);
+      router.replace(newUrl.toString(), { scroll: false });
+
+      fetchProductData(newVariantId);
     };
 
-    const handleImageClick = async (v) => {
-      // setLoading(true);
+    const handleImageClick = (v) => {
       if (v.quantity > 0) {
-        // setActiveId(v.id);
         handleVariantChange(v.id);
-        // await checkCart();
         return; // Don't do anything if the variant is not available
-      } else{
-        alert("Error");
-      }
-      setLoading(false);
+      } 
     };
 
     
@@ -178,7 +179,7 @@ const SizeColorProduct = ({ productData }) => {
                                     <img onClick={() => setMainImage(variantDetail.image)} src={`${variantDetail.image}`} alt="product side" />
                                 </a>
 
-                              {!variantimages? (
+                              {!variantImages? (
                                 <>
                                   {allImages && allImages.map((p) => (
                                       <a key={p.id} href="#" className="product-gallery-item" >
@@ -188,7 +189,7 @@ const SizeColorProduct = ({ productData }) => {
                                 </>
                               ):(
                                 <>
-                                  {variantimages && variantimages.map((p) => (
+                                  {variantImages && variantImages.map((p) => (
                                     <a key={p.id} href="#" className="product-gallery-item" >
                                           <img onClick={() => setMainImage(p.images)} src={`${p.images}`} alt="product cross" />
                                     </a>
@@ -262,25 +263,13 @@ const SizeColorProduct = ({ productData }) => {
                             </Typography>
 
                             <div className='d-lg-none' style={{ margin: '10px', padding: 0 }}>
-                                <div id="add_to_cart_btn" className="cart-option">
-                                    {!isInCart ? (
-                                        <div id="button_toggle">
-                                            <button disabled={loading} title="Add to shopping Cart" onClick={''} className="cart-btn shadow w-100">
-                                            {loading ? "Loading..." : "Add to Cart"}
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="input-counter">
-                                            <button disabled={loading} className="minus-button shadow-sm text-white" onClick={''}>
-                                                -
-                                            </button>
-                                            <input className="quantity_total_" type="text" min={1} value={quantity} readOnly />
-                                            <button disabled={loading} className="plus-button shadow-sm text-white" onClick={''}>
-                                                +
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
+                              <AddToCartButton
+                                isInCart={Boolean(isInCart)}
+                                productId={productDetail?.id}
+                                variantId={variantDetail?.id}
+                                quantityInCart={cartQuantity}
+                               
+                              />
                             </div>
 
                             <Accordion
@@ -358,25 +347,13 @@ const SizeColorProduct = ({ productData }) => {
           <Box sx={{borderRadius: 2}} className="p-6 mb-6 bg-white shadow-sm rounded-">
 
           <div className='d-none d-md-block' style={{ margin: '10px', padding: 0 }}>
-            <div id="add_to_cart_btn" className="cart-option">
-                {!isInCart ? (
-                    <div id="button_toggle">
-                        <button disabled={loading} title="Add to shopping Cart" onClick={''} className="cart-btn shadow w-100">
-                        {loading ? "Loading..." : "Add to Cart"}
-                        </button>
-                    </div>
-                ) : (
-                    <div className="input-counter">
-                        <button disabled={loading} className="minus-button shadow-sm text-white" onClick={''}>
-                            -
-                        </button>
-                        <input className="quantity_total_" type="text" min={1} value={quantity} readOnly />
-                        <button disabled={loading} className="plus-button shadow-sm text-white" onClick={''}>
-                            +
-                        </button>
-                    </div>
-                )}
-            </div>
+            <AddToCartButton
+              isInCart={Boolean(isInCart)}
+              productId={productDetail?.id}
+              variantId={variantDetail?.id}
+              quantityInCart={cartQuantity}
+              
+            />
           </div>
             <Divider />
 

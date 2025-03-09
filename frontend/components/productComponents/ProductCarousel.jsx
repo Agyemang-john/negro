@@ -2,12 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import Link from 'next/link';
-import api from "../../utils/api";
 import { Skeleton, Stack } from '@mui/material';
 import Rating from '@mui/material/Rating';
 import { truncateText } from '../../functions/Function'; // Adjust the path if needed
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination } from "swiper";
+// import { Navigation, Pagination } from "swiper";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -36,8 +35,12 @@ const ProductCarousel = () => {
 
   const fetchData = async () => {
       try {
-          const response = await api.get('/api/index/');
-          setProducts(response.data.new_products);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_HOST}/api/index/`, {
+          cache: "no-store", // Avoid caching for dynamic content
+          credentials: "include"
+        });
+        const data = await res.json();
+          setProducts(data.new_products || []);
       } catch (error) {
           console.error("Error fetching data:", error);
       } finally {

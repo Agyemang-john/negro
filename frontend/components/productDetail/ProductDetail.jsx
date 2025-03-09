@@ -3,8 +3,6 @@
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-// import { SERVER_URL } from '../../api/constants';
-import api from '../../utils/api'
 
 // import Product from "./Product";
 import NoneProduct from "./NoneProduct";
@@ -28,13 +26,10 @@ import Rating from '@mui/material/Rating';
 import Alert from '@mui/material/Alert';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CheckIcon from '@mui/icons-material/Check';
-// import { useAuthStore } from "../../api/authStore";
-// import { truncateText } from '../../utils/Function'; // Adjust the path if needed
-// import { postViewedProducts, trackProductView } from '../../utils/CartFunctions';
+import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import Swal from 'sweetalert2';
 // import { fetchProductData } from '@/lib/productApi';
 import {fetchProductData} from '../../lib/productApi';
-// import RecentlyViewedProducts from '../partials/RecentlyViewedProducts';
 
 
 const StyledTypography = styled(Typography)({
@@ -99,7 +94,8 @@ const StyledTypography = styled(Typography)({
 const ProductDetail = ({ initialData, sku, slug }) => {
   const [ productData, setProductData ] = useState(initialData|| null );
    // // const isAuthenticated = useAuthStore.getState().isLoggedIn();
-  const [isAuthenticated, setIsAuthenticated] =  useState(false);
+   const { isAuthenticated } = useAppSelector(state => state.auth);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   // const [variantId, setVariantId] = useState(null);
@@ -115,11 +111,11 @@ const ProductDetail = ({ initialData, sku, slug }) => {
 
   const fetchProductData = async (variantId) => {
     try {
-      const response = await api.get(`/api/v1/product/${sku}/${slug}/`, {
-        params: { variantid: variantId || '' },
-      });
-
-      setProductData(response.data);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_HOST}/api/v1/product/${sku}/${slug}/`, 
+        {params: { variantid: variantId || '' },}, {credentials: "include"}
+    );
+      const data = res.json();
+      setProductData(data);
     } catch (error) {
       console.error('Error fetching product data:', error);
       setError('Failed to load product data');
@@ -151,8 +147,8 @@ const ProductDetail = ({ initialData, sku, slug }) => {
   const handleFollowToggle = async () => {
     if (isAuthenticated) {
         try {
-            const response = await api.post(`/api/vendor/${productData.product.vendor.slug}/`);
-            const data = response.data;
+            const res = await fetch(`${process.env.NEXT_PUBLIC_HOST}/api/vendor/${productData.product.vendor.slug}/`, {method: 'POST', credentials: 'include'});
+            const data = await res.json();
             setIsFollowing(data.is_following);  // Update button state
             // setFollowersCount(data.followers_count);
         } catch (error) {
@@ -169,45 +165,8 @@ const ProductDetail = ({ initialData, sku, slug }) => {
     }
   };
   
-  // useEffect(() => {
-  //   postViewedProducts();
-  // }, [sku]);
 
-
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setError(null);
-  
-  //   try {
-  //     const response = await api.post(`/api/add-review/`, {
-  //       review: reviewText,
-  //       rating: rating,
-  //       product: product.product.id,
-  //     });
-  //     console.log('Review added:', response.data);
-
-  //     // Optionally reset the form or handle successful submission
-  //     setReviewSubmitted(true);
-  //     setFeedback('Thank you for your feedback! Your review has been sent for verification and will be visible soon.');
-  //     setReviewText(''); // Clear the review text
-  //     setRating(3); // Reset rating to default
-  //   } catch (err) {
-  //     if (err.response && err.response.status === 403) {
-  //       // Handle the case when the user hasn't purchased the product
-  //       setFeedback('You must purchase this product before leaving a review.');  // Display feedback to the user
-  //     } else {
-  //         setError(err.response?.data || 'An error occurred while submitting your review.'); // Handle other errors
-  //     }
-  //     console.error('Error adding review:', err);
-  //   }
-  // };
-
-
-  // if (loading) return <div>Loading...</div>;
-  // if (error) return <div>{error}</div>;
-  // if (!product) return <div>No product data found</div>;
-
-  const { product } = productData;
+  const { product } = initialData;
 
   let variantComponent;
     switch (product.variant) {
