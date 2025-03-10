@@ -3,7 +3,7 @@
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-
+import CustomTabs  from './CustomTabs';
 import Product from "@/components/productComponents/product";
 import NoneProduct from "./NoneProduct";
 import ColorProduct from './ColorProduct';
@@ -100,13 +100,97 @@ const ProductDetail = ({ initialData }) => {
   const [isFollowing, setIsFollowing] = useState(productData?.is_following|| false) ;
   const [loading, setLoading] = useState(!initialData);
 
-
   const getLabel = (value) => {
     return labels[value] || '';
   };
   const handleSubmit = () => {
 
   }
+
+  const tabLabels = ['Description', 'Additional Information', 'Shipping & Returns', 'Reviews'];
+  const tabContents = [
+    <div><div dangerouslySetInnerHTML={{ __html: productData.product?.description }} /></div>,
+    <div><div dangerouslySetInnerHTML={{ __html: productData.product?.specifications }} /></div>,
+    <div><div dangerouslySetInnerHTML={{ __html: productData.product?.delivery_returns}} /></div>,
+    <div>
+      <div className="review">
+        <Grid container spacing={8} columns={12} sx={{ my: 4 }}>
+        {productData.reviews && productData.reviews?.length > 0 ? (
+        <>
+          {productData.reviews && productData.reviews.map((r) =>(
+            <Grid key={r.id} size={{ xs: 12, sm: 6 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 1, height: '100%', }} >
+                  <Typography gutterBottom variant="h5" component="div">
+                      <Rating name={`rating-1`} value={r.rating} precision={0.5} readOnly/>
+                  </Typography>
+
+                  <TitleTypography gutterBottom variant="h6" tabIndex={0} className={'Mui-focused'} >
+                      {getLabel(r.rating)}
+                  </TitleTypography>
+                  <StyledTypography variant="body1" color="text.secondary" gutterBottom>
+                      {r.review}
+                  </StyledTypography>
+
+                  <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'center', justifyContent: 'space-between', }} >
+                      <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, alignItems: 'center' }}>
+                          <AvatarGroup max={3}>
+                              <Avatar alt="John" src="" sx={{ width: 24, height: 24 }} />
+                          </AvatarGroup>
+                          {/* <Typography variant="caption"> {capitalizeEachWord(r.user.first_name)} </Typography> */}
+                      </Box> 
+                      {/* <Typography variant="caption">{moment(r.date).fromNow()}</Typography> */}
+                  </Box>
+                </Box>
+            </Grid>
+          ))}
+        </>
+        ): 
+        (<>
+        <StyledTypography variant="body1" color="text.secondary" gutterBottom>
+          No reviews yet. Be the first to write a review! 
+        </StyledTypography>
+        </>)}
+        </Grid>
+
+        {error || feedback ? (<Alert severity="error">{error|| feedback}</Alert>):''}
+        {reviewSubmitted && (
+          <Alert icon={<CheckIcon fontSize="inherit" />} severity="success">
+            {feedback}
+          </Alert>
+        )}
+
+        {!isAuthenticated || reviewSubmitted ? (
+          <>{!isAuthenticated ? (<Alert action={
+            <Button color="inherit" size="small"> Signin! </Button>
+          } severity="info">Please log in to submit a review.</Alert>) : 
+          (<Alert severity="info">You have already submitted a review.</Alert>)}</>
+        ) : (
+          <Grid>
+            <form onSubmit={handleSubmit} style={{ margin: '20px' }}>
+              <Typography variant="h5" gutterBottom>Add a Review</Typography>
+              <TextField fullWidth multiline rows={4} value={reviewText} onChange={(e) => setReviewText(e.target.value)} placeholder="Write your review here" required variant="outlined" margin="normal" />
+              <Typography component="legend">Rating:</Typography>
+              <Rating
+                name={`rating-1`}
+                value={rating}
+                precision={1}
+                onChange={(event, newValue) => {
+                  setRating(newValue); // Update rating state on change
+                }}
+                size="large"
+              />
+              <br />
+              {error && <Typography color="error">{error}</Typography>}
+              <Button type="submit" variant="contained" color="primary-color">Submit Review</Button>
+            </form>
+          </Grid>
+        )}
+        </div>
+    </div>,
+  ];
+
+
+ 
   
   const handleFollowToggle = async () => {
     if (isAuthenticated) {
@@ -189,126 +273,9 @@ const ProductDetail = ({ initialData }) => {
 
                       {variantComponent}
 
+
                       <div className="product-details-tab">
-                          <ul className="nav nav-pills justify-content-center" role="tablist">
-                              <li className="nav-item">
-                                  <a className="nav-link active" id="product-desc-link" data-toggle="tab" href="#product-desc-tab" role="tab" aria-controls="product-desc-tab" aria-selected="true">Description</a>
-                              </li>
-                              <li className="nav-item">
-                                  <a className="nav-link" id="product-info-link" data-toggle="tab" href="#product-info-tab" role="tab" aria-controls="product-info-tab" aria-selected="false">Additional information</a>
-                              </li>
-                              <li className="nav-item">
-                                  <a className="nav-link" id="product-shipping-link" data-toggle="tab" href="#product-shipping-tab" role="tab" aria-controls="product-shipping-tab" aria-selected="false">Shipping & Returns</a>
-                              </li>
-                              <li className="nav-item">
-                                  <a className="nav-link" id="product-review-link" data-toggle="tab" href="#product-review-tab" role="tab" aria-controls="product-review-tab" aria-selected="false">Review{productData.review_count !== 1 ? 's': ''} ({productData.review_count})</a>
-                              </li>
-                          </ul>
-                          <div className="tab-content">
-                              <div className="tab-pane fade show active" id="product-desc-tab" role="tabpanel" aria-labelledby="product-desc-link">
-                                  <div className="product-desc-content">
-                                      <h3>Product Information</h3>
-                                      <div>
-                                        {/* {product.product.description} */}
-                                        <div dangerouslySetInnerHTML={{ __html: productData.product?.description }} />
-                                      </div>
-                                  </div>
-                              </div>
-                              <div className="tab-pane fade" id="product-info-tab" role="tabpanel" aria-labelledby="product-info-link">
-                                  <div className="product-desc-content">
-                                      <h3>Specifications</h3>
-                                      <div>
-                                        {/* {product.product.description} */}
-                                        <div dangerouslySetInnerHTML={{ __html: productData.product?.specifications }} />
-                                      </div>
-                                  </div>
-                              </div>
-                              <div className="tab-pane fade" id="product-shipping-tab" role="tabpanel" aria-labelledby="product-shipping-link">
-                                  <div className="product-desc-content">
-                                      <h3>Delivery & returns</h3>
-                                      <div>
-                                        <div dangerouslySetInnerHTML={{ __html: productData.product?.delivery_returns}} />
-                                      </div>
-                                  </div>
-                              </div>
-                              <div className="tab-pane fade" id="product-review-tab" role="tabpanel" aria-labelledby="product-review-link">
-                                  <div className="reviews">
-                                      <h3>Review{productData.review_count !== 1 ? 's': ''} ({productData.review_count})</h3>
-                                      <div className="review">
-
-                                        <Grid container spacing={8} columns={12} sx={{ my: 4 }}>
-                                        {productData.reviews && productData.reviews?.length > 0 ? (
-                                        <>
-                                          {productData.reviews && productData.reviews.map((r) =>(
-                                            <Grid key={r.id} size={{ xs: 12, sm: 6 }}>
-                                                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 1, height: '100%', }} >
-                                                  <Typography gutterBottom variant="h5" component="div">
-                                                      <Rating name={`rating-1`} value={r.rating} precision={0.5} readOnly/>
-                                                  </Typography>
-
-                                                  <TitleTypography gutterBottom variant="h6" tabIndex={0} className={'Mui-focused'} >
-                                                      {getLabel(r.rating)}
-                                                  </TitleTypography>
-                                                  <StyledTypography variant="body1" color="text.secondary" gutterBottom>
-                                                      {r.review}
-                                                  </StyledTypography>
-
-                                                  <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, alignItems: 'center', justifyContent: 'space-between', }} >
-                                                      <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, alignItems: 'center' }}>
-                                                          <AvatarGroup max={3}>
-                                                              <Avatar alt="John" src="" sx={{ width: 24, height: 24 }} />
-                                                          </AvatarGroup>
-                                                          {/* <Typography variant="caption"> {capitalizeEachWord(r.user.first_name)} </Typography> */}
-                                                      </Box> 
-                                                      {/* <Typography variant="caption">{moment(r.date).fromNow()}</Typography> */}
-                                                  </Box>
-                                                </Box>
-                                            </Grid>
-                                          ))}
-                                        </>
-                                        ): 
-                                        (<>
-                                        <StyledTypography variant="body1" color="text.secondary" gutterBottom>
-                                          No reviews yet. Be the first to write a review! 
-                                        </StyledTypography>
-                                        </>)}
-                                      </Grid>
-
-                                      {error || feedback ? (<Alert severity="error">{error|| feedback}</Alert>):''}
-                                     {reviewSubmitted && (
-                                        <Alert icon={<CheckIcon fontSize="inherit" />} severity="success">
-                                          {feedback}
-                                        </Alert>
-                                      )}
-                                        {!isAuthenticated || reviewSubmitted ? (
-                                          <>{!isAuthenticated ? (<Alert action={
-                                            <Button color="inherit" size="small"> Signin! </Button>
-                                          } severity="info">Please log in to submit a review.</Alert>) : (<Alert severity="info">You have already submitted a review.</Alert>)}</>
-                                        ) : (
-                                        <Grid>
-                                          <form onSubmit={handleSubmit} style={{ margin: '20px' }}>
-                                            <Typography variant="h5" gutterBottom>Add a Review</Typography>
-                                            <TextField fullWidth multiline rows={4} value={reviewText} onChange={(e) => setReviewText(e.target.value)} placeholder="Write your review here" required variant="outlined" margin="normal" />
-                                            <Typography component="legend">Rating:</Typography>
-                                            <Rating
-                                              name={`rating-1`}
-                                              value={rating}
-                                              precision={1}
-                                              onChange={(event, newValue) => {
-                                                setRating(newValue); // Update rating state on change
-                                              }}
-                                              size="large"
-                                            />
-                                            <br />
-                                            {error && <Typography color="error">{error}</Typography>}
-                                            <Button type="submit" variant="contained" color="primary">Submit Review</Button>
-                                          </form>
-                                        </Grid>
-                                        )}
-                                      </div>
-                                  </div>
-                              </div>
-                          </div>
+                        <CustomTabs tabLabels={tabLabels} tabContents={tabContents} />
                       </div>
                       
                         {productData?.related_products?.length > 0 && (
