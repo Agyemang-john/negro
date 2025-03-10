@@ -4,10 +4,8 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-// import Product from "./Product";
+import Product from "@/components/productComponents/product";
 import NoneProduct from "./NoneProduct";
-// import useVariantChange, {capitalizeEachWord, refreshDetail}  from "../../utils/Function";
-// import { useCart } from '../../utils/CartContext';
 import ColorProduct from './ColorProduct';
 import SizeProduct from './SizeProduct';
 import SizeColorProduct from './SizeColorProduct';
@@ -91,51 +89,17 @@ const StyledTypography = styled(Typography)({
   };
 
 
-const ProductDetail = ({ initialData, sku, slug }) => {
-  const [ productData, setProductData ] = useState(initialData|| null );
-   // // const isAuthenticated = useAuthStore.getState().isLoggedIn();
+const ProductDetail = ({ initialData }) => {
+  const [ productData, setProductData ] = useState(initialData);
    const { isAuthenticated } = useAppSelector(state => state.auth);
-
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  // const [variantId, setVariantId] = useState(null);
-  // const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // const [activeId, setActiveId] = useState(null);
   const [reviewText, setReviewText] = useState('');
   const [rating, setRating] = useState(3);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [isFollowing, setIsFollowing] = useState(productData?.is_following|| false) ;
- 
+  const [loading, setLoading] = useState(!initialData);
 
-  const fetchProductData = async (variantId) => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_HOST}/api/v1/product/${sku}/${slug}/`, 
-        {params: { variantid: variantId || '' },}, {credentials: "include"}
-    );
-      const data = res.json();
-      setProductData(data);
-    } catch (error) {
-      console.error('Error fetching product data:', error);
-      setError('Failed to load product data');
-    }
-  };
-
-  const handleVariantChange = async (newVariantId) => {
-    await fetchProductData(newVariantId);
-
-    // Update the URL without reloading the page
-    router.push(`?variantid=${newVariantId}`, undefined, { shallow: true });
-  };
-
-  // Automatically update product data when variant changes in URL
-  useEffect(() => {
-    const variantId = searchParams.get('variantid');
-    if (variantId) {
-      fetchProductData(variantId);
-    }
-  }, [searchParams, sku, slug]);
 
   const getLabel = (value) => {
     return labels[value] || '';
@@ -346,70 +310,48 @@ const ProductDetail = ({ initialData, sku, slug }) => {
                               </div>
                           </div>
                       </div>
-                        {productData.related_products && productData.related_products.length > 0 ? (<>
-                        <div className="row mt-30">
-                          <div className="col-12">
-                            <div className="heading heading-flex">
-                              <div className="heading-left">
-                                  <h2 className="title">Products related to this item</h2>
-                              </div>
-                              <div className="heading-right">
-                                  <Link href={'#'} className="title-link">View more Products <ChevronRightIcon /></Link>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="col-12">
-                              <div className="row">
-                             
-                              </div>
-                          </div>
-                        </div>
-                        </>)
-                        : 
-                        ('')}
-                        
-                        {productData.vendor_products && productData.vendor_products.length > 0 ? (<>
-                        <div className="row mt-3">
-                          <div className="col-12">
-                            <div className="heading heading-flex">
-                              <div className="heading-left">
-                                  <h2 className="title">More from This Seller</h2>
-                              </div>
-                              <div className="heading-right">
-                                  <Link href={'#'} className="title-link">View more Products <ChevronRightIcon /></Link>
-                              </div>
-                            </div>
-                          </div>
-                          {/* <div className="col-12">
-                              <div className="row">
-                              <OwlCarousel className="owl-theme" {...options}>
-                                {product?.vendor_products.map((p) => (
-                                  <div key={p.id} className="product">
-                                    <figure className="product-media">
-                                      <Link to={`/${p.sku}/${p.slug}`}>
-                                        <img
-                                          src={`${p.image}`}
-                                          alt="Product"
-                                          className="product-image"
-                                        />
-                                      </Link>
-                                    </figure>
-                                    <div className="product-body">
-                                      <h3 className="product-title">
-                                        <Link to={`/${p.sku}/${p.slug}`}>{truncateText(p.title, 23)}</Link>
-                                      </h3>
-                                      <div className="product-price">GHS{p.price.toFixed(2)}</div>
-                                    </div>
+                      
+                        {productData?.related_products?.length > 0 && (
+                          <>
+                            <div className="row mt-3">
+                              <div className="col-12">
+                                <div className="heading heading-flex">
+                                  <div className="heading-left">
+                                    <h2 className="title">See related products</h2>
                                   </div>
-                                ))}
-                              </OwlCarousel>
+                                  <div className="heading-right">
+                                    <Link href="#" className="title-link">
+                                      View more Products <ChevronRightIcon />
+                                    </Link>
+                                  </div>
+                                </div>
                               </div>
-                          </div> */}
-                        </div>
-                        </>)
-                        :('')
-                        }
+                            </div>
+
+                            <Product products={productData.related_products} loading={loading} />
+                          </>
+                        )}
+
+                        {productData?.vendor_products?.length > 0 && (
+                          <>
+                            <div className="row mt-3">
+                              <div className="col-12">
+                                <div className="heading heading-flex">
+                                  <div className="heading-left">
+                                    <h2 className="title">More from this Seller</h2>
+                                  </div>
+                                  <div className="heading-right">
+                                    <Link href="#" className="title-link">
+                                      View more Products <ChevronRightIcon />
+                                    </Link>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <Product products={productData.vendor_products} loading={loading} />
+                          </>
+                        )}
 
                       </div>
                   </div>
@@ -417,7 +359,6 @@ const ProductDetail = ({ initialData, sku, slug }) => {
 
               </main>
           </div>
-      {/* <Footer/> */}
       </>
   );
 };

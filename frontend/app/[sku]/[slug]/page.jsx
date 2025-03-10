@@ -21,7 +21,7 @@ export default async function Product({ params, searchParams }) {
 
 		const product = await res.json();
 
-		return <ProductDetail initialData={product} sku={sku} slug={slug} />;
+		return <ProductDetail initialData={product}/>;
 	} catch (error) {
 		console.error("Error fetching product data:", error);
 		return <p>Failed to load product.</p>;

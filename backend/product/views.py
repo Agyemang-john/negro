@@ -76,22 +76,6 @@ class ProductDetailAPIView(APIView):
         is_in_cart = bool(cart_item)  # True if item exists
         quantity = cart_item.quantity if cart_item else 0
 
-        # Handle recently viewed products
-        recently_viewed = request.session.get('recently_viewed', [])
-        if product.id in recently_viewed:
-            recently_viewed.remove(product.id)
-        recently_viewed.insert(0, product.id)
-        request.session['recently_viewed'] = recently_viewed[:10]
-
-        # Increment views if not recently viewed
-        session_key = f"last_view_{product.id}"
-        last_view_time = request.session.get(session_key, None)
-        now = datetime.now()
-        if not last_view_time or (now - datetime.fromisoformat(last_view_time)) > timedelta(hours=24):
-            product.views += 1
-            product.save()
-            request.session[session_key] = now.isoformat()
-
         # Check if the user is following the vendor
         is_following = (
             request.user.is_authenticated and
