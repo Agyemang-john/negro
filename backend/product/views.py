@@ -60,12 +60,11 @@ class ProductDetailAPIView(APIView):
             status='published',
             sku=sku
         )
-       
-
-        cart = get_or_create_cart(request)
-        variant_id = request.GET.get('variantid')
-        
         variant = None
+
+        variant_id = request.GET.get('variantid')
+        cart = get_or_create_cart(request)
+        
         if variant_id:
             variant = Variants.objects.filter(id=variant_id, product=product).first()
         elif Variants.objects.filter(product=product).exists():

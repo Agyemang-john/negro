@@ -7,15 +7,18 @@ from .models import Cart, CartItem
 
 def get_or_create_cart(request):
     """Returns the user's cart if authenticated, otherwise creates/returns a guest cart via a cart_id cookie."""
+    if not request.session.session_key:
+        request.session.create()
+    session_key = request.session.session_key
     
+    session_cart_id = request.COOKIES.get('cart_id')
     # **Authenticated User:** Return the user's cart
     if request.user.is_authenticated:
-        cart, _ = Cart.objects.get_or_create(user=request.user, session_id=None)
+        cart, _ = Cart.objects.get_or_create(user=request.user)
         return cart  # No response modification needed
     else:
-        session_cart_id = request.COOKIES.get('cart_id')
         # Retrieve or create a cart for the guest user based on `session_id`
-        cart, _ = Cart.objects.get_or_create(session_id=session_cart_id, user=None)
+        cart, _ = Cart.objects.get_or_create(session_id=session_key)
 
         return cart
   # Return both the cart instance and the response
