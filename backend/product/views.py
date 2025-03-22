@@ -19,7 +19,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from order.service import *
-from order.utils import get_or_create_cart
+from order.utils import *
 
 
 class AjaxColorAPIView(APIView):
@@ -60,20 +60,7 @@ class ProductDetailAPIView(APIView):
             status='published',
             sku=sku
         )
-        variant = None
-
-        variant_id = request.GET.get('variantid')
-        cart = get_or_create_cart(request)
-        
-        if variant_id:
-            variant = Variants.objects.filter(id=variant_id, product=product).first()
-        elif Variants.objects.filter(product=product).exists():
-            variant = Variants.objects.filter(product=product).first()
-
-        # Check if product exists in the cart
-        cart_item = CartItem.objects.filter(cart=cart, product=product, variant=variant).first()
-        is_in_cart = bool(cart_item)  # True if item exists
-        quantity = cart_item.quantity if cart_item else 0
+       
 
         # Check if the user is following the vendor
         is_following = (
@@ -119,14 +106,34 @@ class ProductDetailAPIView(APIView):
             "variant_data": variant_data,
             'is_following': is_following,
             "delivery_options": ProductDeliveryOptionSerializer(delivery_options, many=True).data,
-            'is_in_cart': is_in_cart,
-            'cart_quantity': quantity,
+            # 'is_in_cart': is_in_cart,
+            # 'cart_quantity': quantity,
         }
 
         # Cache and respond
         cache_key = f"product_detail_{slug}_{sku}"
         cache_timeout = 60 * 10  # 10 minutes
         cache.set(cache_key, response_data, timeout=cache_timeout)
+
+        variant = None
+        checking_product = get_object_or_404(Product, slug=slug)
+
+        variant_id = request.GET.get('variantid')
+        cart = get_cart(request)
+        if variant_id:
+            variant = Variants.objects.filter(id=variant_id, product=checking_product).first()
+        elif Variants.objects.filter(product=checking_product).exists():
+            variant = Variants.objects.filter(product=checking_product).first()
+
+        # Check if product exists in the cart
+        cart_item = CartItem.objects.filter(cart=cart, product=checking_product, variant=variant).first()
+        
+        is_in_cart = bool(cart_item)  # True if item exists
+        quantity = cart_item.quantity if cart_item else 0
+
+        response_data['is_in_cart'] = is_in_cart
+        response_data['cart_quantity'] = quantity
+
 
         return Response(response_data, status=status.HTTP_200_OK)
  

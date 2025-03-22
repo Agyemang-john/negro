@@ -12,7 +12,8 @@ const AddToCartButton = ({ isInCart, productId, variantId, quantityInCart }) => 
 
   useEffect(() => {
     setInCart(isInCart);
-  }, [isInCart]);
+    setQuantity(quantityInCart)
+  }, [isInCart, quantityInCart]);
 
   const handleAddToCart = async (change) => {
     try {

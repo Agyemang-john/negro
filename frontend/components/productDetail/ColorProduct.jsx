@@ -81,13 +81,11 @@ const ColorProduct = ({ productData }) => {
     };
   
     const handleVariantChange = (newVariantId) => {
-
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set("variantid", newVariantId);
       router.replace(newUrl.toString(), { scroll: false });
 
       fetchProductData(newVariantId);
-
     };
   
     // Function to Handle Image Click

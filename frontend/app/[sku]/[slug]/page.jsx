@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 export default async function Product({ params, searchParams }) {
 	const cookieStore = cookies();
 	const cartId = (await cookieStore).get('cart_id')?.value;
+	const accessToken = (await cookieStore).get('access')?.value;
 	const { variantid } = await searchParams || {};
 	const { sku, slug } = await params;
 
@@ -15,7 +16,8 @@ export default async function Product({ params, searchParams }) {
 
 	try {
 		const res = await fetch(url, { method: 'GET', cache: "no-store", credentials: "include", headers: {
-			Cookie: `cart_id=${cartId}`
+			Cookie: `cart_id=${cartId}`,
+			Authorization: `Bearer ${accessToken}`
 		} }); // No cache for dynamic content
 		if (!res.ok) throw new Error("Failed to fetch product");
 
@@ -32,6 +34,7 @@ export default async function Product({ params, searchParams }) {
 export async function generateMetadata({ params, searchParams }) {
 	const cookieStore = cookies();
 	const cartId = (await cookieStore).get('cart_id')?.value;
+	const accessToken = (await cookieStore).get('access')?.value;
 	const { variantid } = await searchParams || {};
 	const { sku, slug } = await params;
 
@@ -42,7 +45,8 @@ export async function generateMetadata({ params, searchParams }) {
 
 	try {
 		const res = await fetch(url, { method: 'GET', cache: "no-store", credentials: "include", headers: {
-			Cookie: `cart_id=${cartId}`
+			Cookie: `cart_id=${cartId}`,
+			Authorization: `Bearer ${accessToken}`
 		} });
 		if (!res.ok) throw new Error("Failed to fetch metadata");
 
