@@ -60,28 +60,30 @@ class ProductDetailAPIView(APIView):
             status='published',
             sku=sku
         )
-        variant = None
 
+        variant = None
         variant_id = request.GET.get('variantid')
+
+        # **Retrieve or create cart**
         cart = get_or_create_cart(request)
-        
+
         if variant_id:
             variant = Variants.objects.filter(id=variant_id, product=product).first()
         elif Variants.objects.filter(product=product).exists():
             variant = Variants.objects.filter(product=product).first()
 
-        # Check if product exists in the cart
+        # **Check if product exists in the cart**
         cart_item = CartItem.objects.filter(cart=cart, product=product, variant=variant).first()
-        is_in_cart = bool(cart_item)  # True if item exists
+        is_in_cart = bool(cart_item)
         quantity = cart_item.quantity if cart_item else 0
 
-        # Check if the user is following the vendor
+        # **Check if the user is following the vendor**
         is_following = (
             request.user.is_authenticated and
             product.vendor.followers.filter(id=request.user.id).exists()
         )
 
-        # Serialize images, related products, reviews, etc.
+        # **Serialize images, related products, reviews, etc.**
         p_images = ProductImageSerializer(product.p_images.all(), many=True, context={'request': request}).data
         related_products = Product.objects.filter(
             sub_category=product.sub_category, status="published"
@@ -92,11 +94,10 @@ class ProductDetailAPIView(APIView):
         reviews = ProductReview.objects.filter(product=product, status=True).order_by("-date")
         delivery_options = ProductDeliveryOption.objects.filter(product=product)
 
-        # Variant data
+        # **Variant data**
         variant_data = {}
         if product.variant != "None":
-            variant_id = request.GET.get('variantid', None)
-            variant = Variants.objects.get(id=variant_id) if variant_id else Variants.objects.filter(product=product).first()
+            variant = Variants.objects.filter(product=product).first()
             variant_data = {
                 'variant': VariantSerializer(variant, context={'request': request}).data,
                 'variant_images': VariantImageSerializer(VariantImage.objects.filter(variant=variant), many=True, context={'request': request}).data,
@@ -104,10 +105,10 @@ class ProductDetailAPIView(APIView):
                 'sizes': VariantSerializer(Variants.objects.raw('SELECT * FROM product_variants WHERE product_id=%s GROUP BY size_id', [product.id]), many=True, context={'request': request}).data,
             }
 
-        # Serialize the product
+        # **Serialize the product**
         serialized_product = ProductSerializer(product, context={'request': request}).data
 
-        # Prepare response
+        # **Prepare response**
         response_data = {
             "product": serialized_product,
             "p_images": p_images,
@@ -123,10 +124,11 @@ class ProductDetailAPIView(APIView):
             'cart_quantity': quantity,
         }
 
-        # Cache and respond
+        # **Cache the response**
         cache_key = f"product_detail_{slug}_{sku}"
         cache_timeout = 60 * 10  # 10 minutes
         cache.set(cache_key, response_data, timeout=cache_timeout)
 
         return Response(response_data, status=status.HTTP_200_OK)
+
  

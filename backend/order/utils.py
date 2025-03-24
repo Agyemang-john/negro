@@ -1,27 +1,33 @@
-import uuid
 from django.http import JsonResponse
 from django.db import transaction
-import uuid
 from django.http import JsonResponse
 from .models import Cart, CartItem
 
-def get_or_create_cart(request):
-    """Returns the user's cart if authenticated, otherwise creates/returns a guest cart via a cart_id cookie."""
-    if not request.session.session_key:
-        request.session.create()
-    session_key = request.session.session_key
-    
-    session_cart_id = request.COOKIES.get('cart_id')
-    # **Authenticated User:** Return the user's cart
-    if request.user.is_authenticated:
-        cart, _ = Cart.objects.get_or_create(user=request.user)
-        return cart  # No response modification needed
-    else:
-        # Retrieve or create a cart for the guest user based on `session_id`
-        cart, _ = Cart.objects.get_or_create(session_id=session_key)
+from uuid import uuid4
 
-        return cart
-  # Return both the cart instance and the response
+
+def get_or_create_cart(request):
+    cart_id = request.COOKIES.get('cart_id')  # Retrieve cart_id from cookies
+    cart = None
+
+    if request.user.is_authenticated:
+        # **Authenticated User:** Use user-specific cart
+        cart, _ = Cart.objects.get_or_create(user=request.user)
+        
+        # Merge guest cart into user cart if cart_id exists
+        if cart_id:
+            guest_cart = Cart.objects.filter(session_id=cart_id).first()
+            if guest_cart and guest_cart != cart:
+                guest_cart.user = request.user  # Assign user to guest cart
+                guest_cart.session_id = None  # Remove session association
+                guest_cart.save()
+    else:
+        # **Guest User:** Use session_id
+        cart, _ = Cart.objects.get_or_create(session_id=cart_id)
+    
+    return cart
+
+
 
 def transfer_cart_to_user(request, user):    
     session_id = request.COOKIES.get('cart_id')  # Get from cookies
