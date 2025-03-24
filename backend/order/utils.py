@@ -2,34 +2,8 @@ from django.http import JsonResponse
 from django.db import transaction
 from django.http import JsonResponse
 from .models import Cart, CartItem
+import uuid
 
-<<<<<<< HEAD
-from uuid import uuid4
-
-
-def get_or_create_cart(request):
-    cart_id = request.COOKIES.get('cart_id')  # Retrieve cart_id from cookies
-    cart = None
-
-    if request.user.is_authenticated:
-        # **Authenticated User:** Use user-specific cart
-        cart, _ = Cart.objects.get_or_create(user=request.user)
-        
-        # Merge guest cart into user cart if cart_id exists
-        if cart_id:
-            guest_cart = Cart.objects.filter(session_id=cart_id).first()
-            if guest_cart and guest_cart != cart:
-                guest_cart.user = request.user  # Assign user to guest cart
-                guest_cart.session_id = None  # Remove session association
-                guest_cart.save()
-    else:
-        # **Guest User:** Use session_id
-        cart, _ = Cart.objects.get_or_create(session_id=cart_id)
-    
-    return cart
-
-
-=======
 from django.core.exceptions import ObjectDoesNotExist
 
 def get_cart(request):
@@ -65,7 +39,6 @@ def create_or_get_cart(request):
         cart, _ = Cart.objects.get_or_create(session_id=session_cart_id)
 
     return cart
->>>>>>> a9400cb7ccfd8670d73e0af9aaf78efdd9c68408
 
 def transfer_cart_to_user(request, user):    
     session_id = request.COOKIES.get('cart_id')  # Get from cookies

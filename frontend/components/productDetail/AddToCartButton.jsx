@@ -13,7 +13,7 @@ const AddToCartButton = ({ isInCart, productId, variantId, quantityInCart }) => 
   useEffect(() => {
     setInCart(isInCart);
     setQuantity(quantityInCart);
-  }, [isInCart, quantityInCart]);
+  }, [isInCart, quantityInCart, variantId]);
 
   const handleAddToCart = async (change) => {
     try {
@@ -28,7 +28,7 @@ const AddToCartButton = ({ isInCart, productId, variantId, quantityInCart }) => 
   };
 
   return (
-    <div id="add_to_cart_btn" className="cart-option justify-content-center">
+    <div id="add_to_cart_btn" className="cart-option justify-content-center mt-1">
       {!inCart ? (
         <div id="button_toggle">
           <button

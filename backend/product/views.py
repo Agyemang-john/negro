@@ -84,7 +84,8 @@ class ProductDetailAPIView(APIView):
         # **Variant data**
         variant_data = {}
         if product.variant != "None":
-            variant = Variants.objects.filter(product=product).first()
+            variant_id = request.GET.get('variantid')
+            variant = Variants.objects.get(id=variant_id) if variant_id else Variants.objects.filter(product=product).first()
             variant_data = {
                 'variant': VariantSerializer(variant, context={'request': request}).data,
                 'variant_images': VariantImageSerializer(VariantImage.objects.filter(variant=variant), many=True, context={'request': request}).data,
@@ -123,8 +124,8 @@ class ProductDetailAPIView(APIView):
         variant_id = request.GET.get('variantid')
         cart = get_cart(request)
         if variant_id:
-            variant = Variants.objects.filter(id=variant_id, product=checking_product).first()
-        elif Variants.objects.filter(product=checking_product).exists():
+            variant = Variants.objects.get(id=variant_id)
+        else:
             variant = Variants.objects.filter(product=checking_product).first()
 
         # Check if product exists in the cart

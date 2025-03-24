@@ -6,8 +6,6 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import AddToCartButton from './AddToCartButton';
 
 import Rating from '@mui/material/Rating';
-import Skeleton from '@mui/material/Skeleton';
-import Stack from '@mui/material/Stack';
 import XIcon from '@mui/icons-material/X';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import FacebookIcon from '@mui/icons-material/Facebook';
@@ -15,12 +13,10 @@ import PinterestIcon from '@mui/icons-material/Pinterest';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import Divider from '@mui/material/Divider';
-import RoomIcon from '@mui/icons-material/Room';
-import SafetyCheckIcon from '@mui/icons-material/SafetyCheck';
-import Forward30Icon from '@mui/icons-material/Forward30';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import Button from '@mui/material/Button';
+import  ProductCard  from "./SideCard";
 
-// import BasicModal from '../partials/Modal';
+import BasicModal from '@/components/modals/Modal';
 // import SizeChart from '../partials/SizeChart';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -33,10 +29,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid2';
-import Chip from '@mui/material/Chip';
-import Button from '@mui/material/Button';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import VerifiedIcon from '@mui/icons-material/Verified';
+
 
 const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loading }) => {
     const { sku, slug } = useParams(); // Get route params
@@ -81,6 +74,8 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
         const res = await fetch(url, { method: "GET", cache: "no-store", credentials: "include"});
         const data = await res.json();
 
+        console.log(data);
+
         setIsInCart(data?.is_in_cart);
         setCartQuantity(data?.cart_quantity);
         setSizeDetail(data.variant_data.sizes);
@@ -99,10 +94,13 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
 
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set("variantid", newVariantId);
-      router.replace(newUrl.toString(), { scroll: false });
+      router.replace(newUrl.toString(), { scroll: true });
 
       fetchProductData(newVariantId);
+    };
 
+    const onSelect = (v) => {
+        handleVariantChange(v);
     };
 
 
@@ -192,18 +190,29 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
                                 <span style={{ cursor: 'pointer'}} className="chart_link"><a id="sizeChart-button" onClick={handleClickOpen('paper')}><AssignmentIcon />size guide</a></span>
                             </div>
 
-                            <div className="details-filter-row details-row-size">
-                                <label>Sizes:</label>
-                                <div className="product-nav swatch-container product-nav-thumbs">
-                                    <select name="size" id="mySelect" onChange={(e) => handleVariantChange(e.target.value)} className="form-control">
-                                      {sizeDetail.map((rs) => (
-                                        <option key={rs.id} value={rs.id} selected={variantDetail.id === rs.id}>
-                                          {rs.size.name}
-                                        </option>
-                                      ))}
-                                    </select>
-                                </div>
-                            </div>
+                            <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
+                              {sizeDetail.map((variant) => (
+                                <Button
+                                  key={variant.id}
+                                  variant={variantDetail?.id === variant.id ? "outlined" : "outlined"}
+                                  sx={{
+                                    borderRadius: 2,
+                                    textTransform: "none",
+                                    fontWeight: "bold",
+                                    border: variantDetail?.id === variant.id ? "1px dark.300 solid" : "none",
+                                    bgcolor: variantDetail?.id === variant.id ? "white" : "white",
+                                    color: "black",
+                                    "&:hover": {
+                                      bgcolor: "grey.300",
+                                    },
+                                    minWidth: 80,
+                                  }}
+                                  onClick={() => onSelect(variant?.id)}
+                                >
+                                  {variant.size.name}
+                                </Button>
+                              ))}
+                            </Box>
 
                             <div className='d-lg-none' style={{ margin: '10px', padding: 0 }}>
                               <AddToCartButton
@@ -288,105 +297,22 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
             </div>
         </div>
 
+        <BasicModal open={open} handleClose={handleClose} />
+
         <aside className='col-lg-3'>
-          <div className="p-6 mb-6 bg-white shadow-sm rounded-lg">
-
-          <div className='d-none d-md-block' style={{ margin: '10px', padding: 0 }}>
-            <AddToCartButton
-              isInCart={Boolean(isInCart)}
-              productId={productDetail?.id}
-              variantId={variantDetail?.id}
-              quantityInCart={cartQuantity}
-              
-            />
-          </div>
-            <Divider />
-
-            {/* Delivery Section */}
-            <h6 className="font-semibold text-gray-800 mt-2">Delivery & Location</h6>
-            {/* <BasicModal open={open} handleClose={handleClose} /> */}
-            <ul>
-              <li className="flex items-start mb-4">
-                <div className='flex items-center'>
-                <RoomIcon fontSize='medium'/>
-                  <span className="block text-md text-gray-700 hover:underline">
-                    {isAuthenticated && address?.address ? (
-                      <Box sx={{ cursor: 'pointer' }} onClick={handleOpen}>{address?.address ? (truncateText(address?.address, 34)):(<>Add Address</>)}</Box> 
-                    ):(
-                      <Box sx={{ cursor: 'pointer' }} onClick={handleOpen}>Login to add address</Box> 
-                    )}
-                  </span>
-                </div>
-              </li>
-              <li className="border-t border-gray-300 mt-4"></li>
-            </ul>
-
-            {/* Return & Warranty Section */}
-            <h6 className=" font-semibold text-gray-800 mt-2">Return & Warranty</h6>
-            <ul>
-              <li className="flex items-center mb-1">
-                <SafetyCheckIcon/>
-                <span className="text-md text-gray-700">100% Authentic</span>
-              </li>
-              <li className="flex items-center mb-1">
-                <Forward30Icon/>
-                <span className="text-md text-gray-700">10 Days Return</span>
-              </li>
-              <li className="flex items-center">
-                <CalendarMonthIcon/>
-                <span className="text-md text-gray-700">12 Months Warranty</span>
-              </li>
-            </ul>
-
-            <Box sx={{ mt: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: 2 }}>
-              {/* Responsive Grid layout */}
-              <Grid container alignItems="center" spacing={2}>
-                {/* Seller Info */}
-                {/* Seller Info */}
-                <Box>
-                  <Typography variant="h6" component="div" gutterBottom>
-                    Sold by: <strong>{productDetail.vendor.name} {productDetail.vendor.is_subscribed ? (<VerifiedIcon fontSize='large' color='info'/>): ''}  </strong>
-                  {/* Verified badge */}
-                  </Typography>
-                  
-                  {/* Link to seller info */}
-                  <Link href={`/seller/${productDetail.vendor.slug}`} underline="hover" color="info" variant="body2">
-                    View Seller Info
-                  </Link>
-                </Box>
-
-                {/* Follow Button */}
-                <Box textAlign={{ xs: 'center', sm: 'right', width: '100%' }}>
-                  <Button
-                    variant="contained"
-                    color={isFollowing ? "secondary" : "info"}
-                    startIcon={<FavoriteIcon />}
-                    size="medium"
-                    disabled={loading}
-                    onClick={handleFollowToggle}
-                    sx={{ textTransform: 'none', width: '100%' }}
-                  >
-                    {isFollowing ? "Unfollow " : "Follow "} ({followerCount})
-                  </Button>
-                </Box>
-              </Grid>
-
-              {/* Divider */}
-              <Divider sx={{ my: 2 }} />
-
-              {/* Additional Seller Info */}
-              <Box>
-                <Typography variant="body1" color="text.secondary">
-                  Ships from: <strong>AwesomeVendor's Warehouse</strong>
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  Returns accepted within 30 days
-                </Typography>
-              </Box>
-            </Box>
-          </div>
+          <ProductCard
+            isInCart={Boolean(isInCart)}
+            cartQuantity={cartQuantity}
+            variant={variantDetail}
+            product={productDetail}
+            followerCount={followerCount}
+            isFollowing={isFollowing}
+            handleFollowToggle={handleFollowToggle}
+            loading={loading}
+            address={address}
+            handleOpen={handleOpen}
+          />
         </aside>
-
     </div>
 
   )

@@ -8,8 +8,6 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import AddToCartButton from './AddToCartButton';
 
 import Rating from '@mui/material/Rating';
-import Skeleton from '@mui/material/Skeleton';
-import Stack from '@mui/material/Stack';
 import XIcon from '@mui/icons-material/X';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import FacebookIcon from '@mui/icons-material/Facebook';
@@ -17,20 +15,6 @@ import PinterestIcon from '@mui/icons-material/Pinterest';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import Divider from '@mui/material/Divider';
-import RoomIcon from '@mui/icons-material/Room';
-import SafetyCheckIcon from '@mui/icons-material/SafetyCheck';
-import Forward30Icon from '@mui/icons-material/Forward30';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-// import BasicModal from '../partials/Modal';
-
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid2';
-import Chip from '@mui/material/Chip';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import VerifiedIcon from '@mui/icons-material/Verified';
-import Drawer from '@mui/material/Drawer'
 
 
 const ColorProduct = ({ productData, handleFollowToggle, isFollowing, followerCount, loading }) => {
@@ -226,106 +210,18 @@ const ColorProduct = ({ productData, handleFollowToggle, isFollowing, followerCo
         </div>
 
         <aside className='col-lg-3'>
-          <div className="p-6 mb-6 bg-white shadow-sm rounded-lg">
-
-          <div className='d-none d-md-block' style={{ margin: '10px', padding: 0 }}>
-          <>
-            <AddToCartButton
-              isInCart={Boolean(isInCart)}
-              productId={productDetail?.id}
-              variantId={variantDetail?.id}
-              quantityInCart={cartQuantity}
-              
-            />
-          </>
-          </div>
-            <Divider />
-
-            {/* Delivery Section */}
-            <h6 className="font-semibold text-gray-800 mt-2">Delivery & Location</h6>
-            {/* <Button onClick={handleOpen}>Open modal from here</Button> */}
-            {/* <BasicModal open={open} handleClose={handleClose} /> */}
-            <ul>
-              <li className="flex items-start mb-4">
-                <div className='flex items-center'>
-                <RoomIcon fontSize='medium'/>
-                  <span className="block text-md text-gray-700 hover:underline">
-                    {isAuthenticated ? (
-                      <Box sx={{ cursor: 'pointer' }} onClick={handleOpen} >{address ? (truncateText(address.address, 34)):(<>Add Address</>)}</Box> 
-                    ):(
-                      <Box sx={{ cursor: 'pointer' }} onClick={handleOpen} >Login to add address</Box> 
-                    )}
-                  </span>
-                </div>
-              </li>
-              <li className="border-t border-gray-300 mt-4"></li>
-            </ul>
-
-            {/* Return & Warranty Section */}
-            <h6 className=" font-semibold text-gray-800 mt-2">Return & Warranty</h6>
-            <ul>
-              <li className="flex items-center mb-1">
-                <SafetyCheckIcon/>
-                <span className="text-md text-gray-700">100% Authentic</span>
-              </li>
-              <li className="flex items-center mb-1">
-                <Forward30Icon/>
-                <span className="text-md text-gray-700">10 Days Return</span>
-              </li>
-              <li className="flex items-center">
-                <CalendarMonthIcon/>
-                <span className="text-md text-gray-700">12 Months Warranty</span>
-              </li>
-            </ul>
-
-            <Box sx={{ mt: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: 2 }}>
-              {/* Responsive Grid layout */}
-              <Grid container alignItems="center" spacing={2}>
-                {/* Seller Info */}
-                {/* Seller Info */}
-                <Box>
-                  <Typography variant="h6" component="div" gutterBottom>
-                    Sold by: <strong>{productDetail.vendor.name} {productDetail.vendor.is_subscribed ? (<VerifiedIcon fontSize='large' color='info'/>): ''}  </strong>
-                  {/* Verified badge */}
-                  </Typography>
-                  
-                  {/* Link to seller info */}
-                  <Link href={`/seller/${productDetail.vendor.slug}`} underline="hover" color="info" variant="body2">
-                    View Seller Info
-                  </Link>
-                </Box>
-
-                {/* Follow Button */}
-                <Box textAlign={{ xs: 'center', sm: 'right', width: '100%' }}>
-                  <Button
-                    variant="contained"
-                    color={isFollowing ? "secondary" : "info"}
-                    startIcon={<FavoriteIcon />}
-                    size="medium"
-                    onClick={handleFollowToggle}
-                    disabled={loading}
-                    sx={{ textTransform: 'none', width: '100%' }}
-                  >
-                    {isFollowing ? "Unfollow " : "Follow "} ({followerCount})
-                  </Button>
-                </Box>
-              </Grid>
-
-              {/* Divider */}
-              <Divider sx={{ my: 2 }} />
-
-              {/* Additional Seller Info */}
-              <Box>
-                <Typography variant="body1" color="text.secondary">
-                  Ships from: <strong>AwesomeVendor's Warehouse</strong>
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  Returns accepted within 30 days
-                </Typography>
-              </Box>
-            </Box>
-
-          </div>
+          <ProductCard
+            isInCart={Boolean(isInCart)}
+            cartQuantity={cartQuantity}
+            variant={variantDetail}
+            product={productDetail}
+            followerCount={followerCount}
+            isFollowing={isFollowing}
+            handleFollowToggle={handleFollowToggle}
+            loading={loading}
+            address={address}
+            handleOpen={handleOpen}
+          />
         </aside>
 
     </div>
