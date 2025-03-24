@@ -67,6 +67,8 @@ class ProductDetailAPIView(APIView):
             request.user.is_authenticated and
             product.vendor.followers.filter(id=request.user.id).exists()
         )
+        follower_count = product.vendor.followers.count()
+        print(follower_count)
 
         # Serialize images, related products, reviews, etc.
         p_images = ProductImageSerializer(product.p_images.all(), many=True, context={'request': request}).data
@@ -105,6 +107,7 @@ class ProductDetailAPIView(APIView):
             'review_count': product.review_count or 0,
             "variant_data": variant_data,
             'is_following': is_following,
+            'follower_count': follower_count,
             "delivery_options": ProductDeliveryOptionSerializer(delivery_options, many=True).data,
             # 'is_in_cart': is_in_cart,
             # 'cart_quantity': quantity,

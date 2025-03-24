@@ -10,15 +10,15 @@ import MenuIcon from '@mui/icons-material/Menu';
 // import { getCartQuantity, addToCart, removeFromCart } from '@/lib/cart';
 import Grid from '@mui/material/Grid';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
-import { useLogoutMutation } from '@/redux/features/authApiSlice';
+import { useLogoutMutation, useRetrieveUserQuery } from '@/redux/features/authApiSlice';
 import { logout as setLogout } from '@/redux/features/authSlice';
 import { useGetCartQuery } from '@/redux/productApi/cartApiSlice';
 
 
 
 function Header() {
-    const { data: cart, isLoading } = useGetCartQuery();
-    const [cartCount, setCartCount] = useState(0);
+    const { data: cart, isLoading: isCartLoading } = useGetCartQuery();
+    const { data: user, isLoading: isUserLoading } = useRetrieveUserQuery();
 
     const dispatch = useAppDispatch();
 
@@ -128,9 +128,13 @@ function Header() {
                                     <span className="wishlist-count badge">3</span>
                                 </div>
                                 <p title="Dashboard">
-                                    {isAuthenticated
-                                        ? `Hello, `
-                                        : 'Login!'}
+                                    {isUserLoading ? (
+                                        '...'
+                                    ) : isAuthenticated && user ? (
+                                        `Hello, ${user.first_name}`
+                                    ) : (
+                                        'Login!'
+                                    )}
                                 </p>
                             </Link>
                         </div>
@@ -141,7 +145,7 @@ function Header() {
                                     <ShoppingCartIcon fontSize="large"/>
                                     <span id="cart_count" className="cart-count">
                                     {/* {cartCount} */}
-                                    {isLoading ? '...' : cart?.quantity || 0}
+                                    {isCartLoading ? '...' : cart?.quantity || 0}
                                     </span> {/* Replace with actual cart count */}
                                 </div>
                                 <p>Cart</p>

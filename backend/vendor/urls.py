@@ -9,7 +9,7 @@ urlpatterns = [
  ############################  VENDOR  ####################
    
     path('register/', VendorSignUpView.as_view(), name='vendor-register'),
-    path('detail/', VendorDetailView.as_view(), name='vendor-detail'),
+    path('seller-detail/<slug>/', VendorDetailView.as_view(), name='vendor-detail'),
     path('data/', VendorAPIView.as_view(), name='vendor'),
     path('opening-hours/', OpeningHourDetailView.as_view(), name='opening-hour'),
     path('order/<int:id>/', OrderDetailsAPIView.as_view(), name='order-details'),

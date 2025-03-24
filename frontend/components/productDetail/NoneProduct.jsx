@@ -1,8 +1,7 @@
 'use client';
 
 import React, {useEffect, useState} from 'react';
-// import { addToCart, removeFromCart } from '@/lib/cart';
-// import {refreshDetail, truncateText}  from "../../utils/Function";
+import { useFollowToggle } from '@/hooks/useFollowToggle';
 import Link from "next/link";
 import ReactImageMagnify from 'react-image-magnify';
 import AddToCartButton from './AddToCartButton';
@@ -46,25 +45,18 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import VerifiedIcon from '@mui/icons-material/Verified';
 
 
-const NoneProduct = ({ productData }) => {
+const NoneProduct = ({ productData, handleFollowToggle, isFollowing, followerCount, loading }) => {  
   const [data, setData] = useState(productData);
   const [isInCart, setIsInCart] = useState(productData.is_in_cart);
   const [cartQuantity, setCartQuantity] = useState(productData.cart_quantity);
   const [p, setProduct] = useState(productData.product);
   const [mainImage, setMainImage] = useState(productData.product.image || null);
-  const [isFollowing, setFollowing] = useState(productData.is_following);
   const [open, setOpen] = useState(false);
   const [p_image, setProductImages] = useState(productData.p_images);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
-
-  // const { cartCount, orderSummary, address, refreshCart } = useCart(); 
-    const [quantity, setQuantity] = useState(1);
-    // const isAuthenticated = useAuthStore.getState().isLoggedIn();
-    const isAuthenticated = useState(false);
-    const [loading, setLoading] = useState(false); 
-    console.log(data);
+  console.log(data);
 
 
   return (
@@ -299,16 +291,17 @@ const NoneProduct = ({ productData }) => {
                 </Box>
 
                 {/* Follow Button */}
-                <Box textAlign={{ xs: 'center', sm: 'right' }}>
+                <Box textAlign={{ xs: 'center', sm: 'right', width: '100%' }}>
                   <Button
                     variant="contained"
                     color={isFollowing ? "secondary" : "info"}
                     startIcon={<FavoriteIcon />}
                     size="medium"
-                    onClick={''}
+                    disabled={loading}
+                    onClick={handleFollowToggle}
                     sx={{ textTransform: 'none', width: '100%' }}
                   >
-                    {isFollowing ? "Unfollow" : "Follow"}
+                    {isFollowing ? "Unfollow" : "Follow"} ({followerCount})
                   </Button>
                 </Box>
               </Grid>
