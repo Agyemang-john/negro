@@ -1,18 +1,14 @@
 import ProductDetail from "@/components/productDetail/ProductDetail";
 import { cookies } from "next/headers";
 
-export default async function Product({ params, searchParams }) {
+export default async function Seller({ params }) {
 	const cookieStore = cookies();
 	const cartId = (await cookieStore).get('cart_id')?.value;
 	const accessToken = (await cookieStore).get('access')?.value;
-	const { variantid } = await searchParams || {};
-	const { sku, slug } = await params;
+	const { slug } = await params;
 
 	// Construct API URL
-	let url = `${process.env.NEXT_PUBLIC_HOST}/api/v1/product/${sku}/${slug}/`;
-	if (variantid) {
-		url += `?variantid=${variantid}`;
-	}
+	let url = `${process.env.NEXT_PUBLIC_HOST}/api/v1/seller-detail/${slug}/`;
 
 	try {
 		const res = await fetch(url, { method: 'GET', cache: "no-store", credentials: "include", headers: {
@@ -31,17 +27,13 @@ export default async function Product({ params, searchParams }) {
 }
 
 // 🔹 Improve SEO with dynamic metadata
-export async function generateMetadata({ params, searchParams }) {
+export async function generateMetadata({ params }) {
 	const cookieStore = cookies();
 	const cartId = (await cookieStore).get('cart_id')?.value;
 	const accessToken = (await cookieStore).get('access')?.value;
-	const { variantid } = await searchParams || {};
-	const { sku, slug } = await params;
+	const { slug } = await params;
 
-	let url = `${process.env.NEXT_PUBLIC_HOST}/api/v1/product/${sku}/${slug}/`;
-	if (variantid) {
-		url += `?variantid=${variantid}`;
-	}
+	let url = `${process.env.NEXT_PUBLIC_HOST}/api/v1/vendor/${slug}/`;
 
 	try {
 		const res = await fetch(url, { method: 'GET', cache: "no-store", credentials: "include", headers: {
@@ -50,10 +42,10 @@ export async function generateMetadata({ params, searchParams }) {
 		} });
 		if (!res.ok) throw new Error("Failed to fetch metadata");
 
-		const product = await res.json();
+		const data = await res.json();
 
 		return {
-			title: product?.product.title || "Product Not Found",
+			title: data?.name || "Product Not Found",
 			description: product?.product.description || "This product does not exist.",
 		};
 	} catch (error) {

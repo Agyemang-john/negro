@@ -8,7 +8,6 @@ from django.utils.crypto import get_random_string
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from product.models import Product, ProductDeliveryOption
-from .utils import get_or_create_cart
 from rest_framework.permissions import IsAuthenticated
 
 
@@ -18,8 +17,10 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from order.models import Cart, CartItem
 from product.models import Product, Variants, ProductDeliveryOption
-from .utils import get_or_create_cart  # Ensure this function is correctly imported
+from .utils import get_cart, create_or_get_cart
 from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.views import APIView
+
 
 
 class AddToCartView(views.APIView):
@@ -41,7 +42,7 @@ class AddToCartView(views.APIView):
 
         # Fetch variant (if applicable)
         variant = get_object_or_404(Variants, id=variant_id, product=product) if variant_id else None
-        cart = get_or_create_cart(request)
+        cart = create_or_get_cart(request)
 
         default_delivery_option = ProductDeliveryOption.objects.filter(
             product=product, default=True
@@ -94,7 +95,7 @@ class RemoveFromCartView(views.APIView):
         variant_id = data.get("variant_id", None)
 
         # Get or create the cart (handles both authenticated and guest users)
-        cart = get_or_create_cart(request)
+        cart = create_or_get_cart(request)
 
         # Fetch the product
         product = get_object_or_404(Product, id=product_id)
@@ -118,23 +119,11 @@ class RemoveFromCartView(views.APIView):
 
         return Response(response_data, status=status.HTTP_200_OK)
 
-class CartQuantityView(views.APIView):
-    """Retrieve the total quantity of items in the user's cart."""
+class CartQuantityView(APIView):
+    """Retrieve the total quantity of items in the user's cart without creating a new cart."""
 
     def get(self, request):
-        try:
-            # Retrieve or create the user's cart
-            cart = get_or_create_cart(request)
+        cart = get_cart(request)  # Use optimized function
 
-            total_quantity = cart.total_quantity
-            # Use DRF Response but include the cookie in guest users
-            return Response({"quantity": total_quantity}, status=status.HTTP_200_OK)
-        except Cart.DoesNotExist:
-            return Response({"quantity": 0}, status=status.HTTP_200_OK)
-
-
-        except Exception as e:
-            return Response(
-                {"error": "An unexpected error occurred. Please try again."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+        total_quantity = cart.total_quantity if cart else 0
+        return Response({"quantity": total_quantity}, status=status.HTTP_200_OK)

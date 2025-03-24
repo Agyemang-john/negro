@@ -6,6 +6,7 @@ from datetime import time, date, datetime
 from django.urls import reverse
 from django.db.models.signals import post_save
 from django.template.loader import render_to_string
+from django.utils.text import slugify
 from datetime import timedelta
 from django_countries.fields import CountryField
 from PIL import Image, ImageDraw, ImageFont
@@ -286,7 +287,7 @@ def user_directory_path(instance, filename):
 
 
 class About(models.Model):
-    vendor = models.OneToOneField(Vendor, on_delete=models.CASCADE)
+    vendor = models.OneToOneField(Vendor, on_delete=models.CASCADE, related_name='about')
     profile_image = models.ImageField(upload_to=user_directory_path, blank=True)
     cover_image = models.ImageField(upload_to='vendor/cover_image', default='vendor/cover.png', blank=True)
     address = models.CharField(max_length=200, default="123 Main street, Suame")

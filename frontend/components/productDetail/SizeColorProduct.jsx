@@ -4,6 +4,7 @@ import React, {useEffect, useState} from 'react';
 import Link from 'next/link';
 import ReactImageMagnify from 'react-image-magnify';
 import AddToCartButton from './AddToCartButton';
+import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 
@@ -15,7 +16,7 @@ import RoomIcon from '@mui/icons-material/Room';
 import SafetyCheckIcon from '@mui/icons-material/SafetyCheck';
 import Forward30Icon from '@mui/icons-material/Forward30';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-// import BasicModal from '../partials/Modal';
+import BasicModal from '@/components/modals/Modal';
 // import SizeChart from '../partials/SizeChart';
 import XIcon from '@mui/icons-material/X';
 import InstagramIcon from '@mui/icons-material/Instagram';
@@ -41,23 +42,20 @@ import WhereToVoteIcon from '@mui/icons-material/WhereToVote';
 
 
 
-const SizeColorProduct = ({ productData }) => {
+const SizeColorProduct = ({ productData, handleFollowToggle, isFollowing, followerCount, loading }) => {
     const { sku, slug } = useParams(); // Get route params
     const searchParams = useSearchParams();
     const router = useRouter();
     const [open, setOpen] = useState(false);
-    const [isFollowing, setFollowing] = useState(productData.is_following);
-
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
-      const [address, setAddress] = useState(null);
-      const [loading, setLoading] = useState(true);
+    const [address, setAddress] = useState(null);
+    const { isAuthenticated } = useAppSelector(state => state.auth);
 
     const [variantImages, setVariantImages] = useState(productData?.variant_data?.variant_images);
     const [isInCart, setIsInCart] = useState(productData?.is_in_cart);
     const [cartQuantity, setCartQuantity] = useState(productData?.cart_quantity);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [productDetail, setProductDetail] = useState(productData?.product);
     const [variantDetail, setVariantDetail] = useState(productData?.variant_data?.variant);
     const [colorDetail, setColorDetail] = useState(productData?.variant_data?.colors);
@@ -360,7 +358,7 @@ const SizeColorProduct = ({ productData }) => {
             {/* Delivery Section */}
             <h6 className="font-semibold text-gray-800 mt-2">Delivery & Location</h6>
             {/* <Button onClick={handleOpen}>Open modal from here</Button> */}
-            {/* <BasicModal open={open} handleClose={handleClose} /> */}
+            <BasicModal open={open} handleClose={handleClose} />
             <ul>
               <li className="flex items-start mb-4">
                 <div className='flex items-center'>
@@ -412,16 +410,17 @@ const SizeColorProduct = ({ productData }) => {
                 </Box>
 
                 {/* Follow Button */}
-                <Box textAlign={{ xs: 'center', sm: 'right' }}>
+                <Box textAlign={{ xs: 'center', sm: 'right', width: '100%' }}>
                   <Button
                     variant="contained"
                     color={isFollowing ? "secondary" : "info"}
                     startIcon={<FavoriteIcon />}
                     size="medium"
-                    onClick={''}
+                    disabled={loading}
+                    onClick={handleFollowToggle}
                     sx={{ textTransform: 'none', width: '100%' }}
                   >
-                    {isFollowing ? "Unfollow" : "Follow"}
+                    {isFollowing ? "Unfollow " : "Follow "} ({followerCount})
                   </Button>
                 </Box>
               </Grid>

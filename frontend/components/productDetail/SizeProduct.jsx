@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-// import useVariantChange, {refreshDetail, truncateText}  from "../../utils/Function";
+import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import Link from 'next/link';
 import ReactImageMagnify from 'react-image-magnify';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
@@ -38,20 +38,22 @@ import Button from '@mui/material/Button';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import VerifiedIcon from '@mui/icons-material/Verified';
 
-const SizeProduct = ({ data, handleFollowToggle, isFollowing }) => {
-  const { sku, slug } = useParams(); // Get route params
-   const searchParams = useSearchParams();
-   const router = useRouter();
+const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loading }) => {
+    const { sku, slug } = useParams(); // Get route params
+    const searchParams = useSearchParams();
+    const router = useRouter();
 
-  const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState(false);
 
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
+    const { isAuthenticated } = useAppSelector(state => state.auth);
+    const [address, setAddress] = useState(null);
+    
    
     const [variantImages, setVariantImages] = useState(data?.variant_data?.variant_images);
     const [isInCart, setIsInCart] = useState(data?.is_in_cart);
     const [cartQuantity, setCartQuantity] = useState(data?.cart_quantity);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [productDetail, setProductDetail] = useState(data?.product);
     const [variantDetail, setVariantDetail] = useState(data?.variant_data?.variant);
     const [sizeDetail, setSizeDetail] = useState(data?.variant_data?.sizes);
@@ -102,10 +104,6 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing }) => {
       fetchProductData(newVariantId);
 
     };
-
- 
-  
- 
 
 
   return (
@@ -358,16 +356,17 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing }) => {
                 </Box>
 
                 {/* Follow Button */}
-                <Box textAlign={{ xs: 'center', sm: 'right' }}>
+                <Box textAlign={{ xs: 'center', sm: 'right', width: '100%' }}>
                   <Button
                     variant="contained"
                     color={isFollowing ? "secondary" : "info"}
                     startIcon={<FavoriteIcon />}
                     size="medium"
+                    disabled={loading}
                     onClick={handleFollowToggle}
                     sx={{ textTransform: 'none', width: '100%' }}
                   >
-                    {isFollowing ? "Unfollow" : "Follow"}
+                    {isFollowing ? "Unfollow " : "Follow "} ({followerCount})
                   </Button>
                 </Box>
               </Grid>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useFollowToggle } from '@/hooks/useFollowToggle';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import CustomTabs  from './CustomTabs';
@@ -91,14 +92,25 @@ const StyledTypography = styled(Typography)({
 
 const ProductDetail = ({ initialData }) => {
   const [ productData, setProductData ] = useState(initialData);
-   const { isAuthenticated } = useAppSelector(state => state.auth);
+  const { isAuthenticated } = useAppSelector(state => state.auth);
   const [error, setError] = useState(null);
   const [reviewText, setReviewText] = useState('');
   const [rating, setRating] = useState(3);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [feedback, setFeedback] = useState('');
-  const [isFollowing, setIsFollowing] = useState(productData?.is_following|| false) ;
-  const [loading, setLoading] = useState(!initialData);
+
+  const [vendorData, setVendorData] = useState({
+    isFollowing: productData?.is_following,
+    followerCount: productData?.follower_count,
+    vendorSlug: productData?.product.vendor.slug,
+  });
+
+  const { isFollowing, followerCount, loading, handleFollowToggle } = useFollowToggle(
+    vendorData.vendorSlug,
+    vendorData.isFollowing,
+    vendorData.followerCount,
+    isAuthenticated
+  );
 
   const getLabel = (value) => {
     return labels[value] || '';
@@ -192,26 +204,26 @@ const ProductDetail = ({ initialData }) => {
 
  
   
-  const handleFollowToggle = async () => {
-    if (isAuthenticated) {
-        try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_HOST}/api/vendor/${productData.product.vendor.slug}/`, {method: 'POST', credentials: 'include'});
-            const data = await res.json();
-            setIsFollowing(data.is_following);  // Update button state
-            // setFollowersCount(data.followers_count);
-        } catch (error) {
-            console.error("Error toggling follow:", error);
-        }
-    } else{
-        Swal.fire({
-            position: "center",
-            icon: "info",
-            title: "Login to follow Seller",
-            showConfirmButton: false,
-            timer: 1500
-        });
-    }
-  };
+  // const handleFollowToggle = async () => {
+  //   if (isAuthenticated) {
+  //       try {
+  //           const res = await fetch(`${process.env.NEXT_PUBLIC_HOST}/api/vendor/${productData.product.vendor.slug}/`, {method: 'POST', credentials: 'include'});
+  //           const data = await res.json();
+  //           setIsFollowing(data.is_following);  // Update button state
+  //           // setFollowersCount(data.followers_count);
+  //       } catch (error) {
+  //           console.error("Error toggling follow:", error);
+  //       }
+  //   } else{
+  //       Swal.fire({
+  //           position: "center",
+  //           icon: "info",
+  //           title: "Login to follow Seller",
+  //           showConfirmButton: false,
+  //           timer: 1500
+  //       });
+  //   }
+  // };
   
 
   const { product } = initialData;
@@ -219,16 +231,40 @@ const ProductDetail = ({ initialData }) => {
   let variantComponent;
     switch (product.variant) {
         case "None":
-            variantComponent = <NoneProduct productData={productData} />;
+            variantComponent = <NoneProduct 
+                                productData={productData} 
+                                handleFollowToggle={handleFollowToggle} 
+                                isFollowing={isFollowing} 
+                                followerCount={followerCount} 
+                                loading={loading}
+                              />;
             break;
         case "Size":
-            variantComponent = <SizeProduct data={productData} handleFollowToggle={handleFollowToggle} isFollowing={isFollowing} />;
+            variantComponent = <SizeProduct 
+                                  data={productData} 
+                                  handleFollowToggle={handleFollowToggle} 
+                                  isFollowing={isFollowing} 
+                                  followerCount={followerCount} 
+                                  loading={loading}
+                                />;
             break;
         case "Color":
-            variantComponent = <ColorProduct productData={productData}/>;
+            variantComponent = <ColorProduct 
+                                productData={productData} 
+                                handleFollowToggle={handleFollowToggle} 
+                                isFollowing={isFollowing} 
+                                followerCount={followerCount} 
+                                loading={loading}
+                              />;
             break;
         case "Size-Color":
-            variantComponent = <SizeColorProduct productData={productData} />;
+            variantComponent = <SizeColorProduct 
+                                  productData={productData} 
+                                  handleFollowToggle={handleFollowToggle} 
+                                  isFollowing={isFollowing} 
+                                  followerCount={followerCount} 
+                                  loading={loading}
+                                />;
             break;
         default:
             variantComponent = <div>Invalid variant type.</div>;

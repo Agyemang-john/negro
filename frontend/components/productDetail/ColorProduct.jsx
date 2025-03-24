@@ -1,7 +1,7 @@
 "use client";
 
 import React, {useEffect, useState} from 'react'
-// import useVariantChange, {refreshDetail, truncateText}  from "../../utils/Function";
+import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import Link from 'next/link';
 import ReactImageMagnify from 'react-image-magnify';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
@@ -33,22 +33,20 @@ import VerifiedIcon from '@mui/icons-material/Verified';
 import Drawer from '@mui/material/Drawer'
 
 
-const ColorProduct = ({ productData }) => {
-  const { sku, slug } = useParams(); // Get route params
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
+const ColorProduct = ({ productData, handleFollowToggle, isFollowing, followerCount, loading }) => {
+    const { sku, slug } = useParams(); // Get route params
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const [open, setOpen] = useState(false);
 
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
+    const { isAuthenticated } = useAppSelector(state => state.auth);
 
     const [address, setAddress] = useState(null);
-    const [isFollowing, setFollowing] = useState(productData?.is_following);
-
     const [variantImages, setVariantImages] = useState(productData?.variant_data?.variant_images);
     const [isInCart, setIsInCart] = useState(productData?.is_in_cart);
     const [cartQuantity, setCartQuantity] = useState(productData?.cart_quantity);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [productDetail, setProductDetail] = useState(productData?.product);
     const [variantDetail, setVariantDetail] = useState(productData?.variant_data?.variant);
     const [colorDetail, setColorDetail] = useState(productData?.variant_data?.colors);
@@ -81,13 +79,11 @@ const ColorProduct = ({ productData }) => {
     };
   
     const handleVariantChange = (newVariantId) => {
-
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set("variantid", newVariantId);
       router.replace(newUrl.toString(), { scroll: false });
 
       fetchProductData(newVariantId);
-
     };
   
     // Function to Handle Image Click
@@ -300,16 +296,17 @@ const ColorProduct = ({ productData }) => {
                 </Box>
 
                 {/* Follow Button */}
-                <Box textAlign={{ xs: 'center', sm: 'right' }}>
+                <Box textAlign={{ xs: 'center', sm: 'right', width: '100%' }}>
                   <Button
                     variant="contained"
                     color={isFollowing ? "secondary" : "info"}
                     startIcon={<FavoriteIcon />}
                     size="medium"
-                    onClick={''}
+                    onClick={handleFollowToggle}
+                    disabled={loading}
                     sx={{ textTransform: 'none', width: '100%' }}
                   >
-                    {isFollowing ? "Unfollow" : "Follow"}
+                    {isFollowing ? "Unfollow " : "Follow "} ({followerCount})
                   </Button>
                 </Box>
               </Grid>

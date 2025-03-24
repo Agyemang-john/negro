@@ -115,6 +115,7 @@ DATABASES = {
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'userauths.authentication.CustomJWTAuthentication',
+        # 'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
 
     # 'DEFAULT_PERMISSION_CLASSES': [
@@ -242,9 +243,42 @@ DJOSER = {
     'SOCIAL_AUTH_ALLOWED_REDIRECT_URIS': env('REDIRECT_URLS').split(',')
 }
 
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    # Access Token Lifetime - 1 hour to balance security and UX
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    
+    # Refresh Token Lifetime - 60 days, for long-term sessions
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=60),
+    
+    # Enable token rotation for better security
+    'ROTATE_REFRESH_TOKENS': True,
+    
+    # Blacklist old refresh tokens after they are rotated
+    'BLACKLIST_AFTER_ROTATION': True,
+    
+    # Algorithm for signing the JWT
+    'ALGORITHM': 'HS256',
+    
+    # HTTP Header for token authorization
+    'AUTH_HEADER_TYPES': ('Bearer',),
+
+    
+    # Enabling sliding token lifetimes for smoother sessions
+    'SLIDING_TOKEN_LIFETIME': timedelta(hours=1),  # Sliding token lifetime 1 hour
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=60),  # Refresh token sliding window
+    
+    # Enable JTI claim for each token (JWT ID)
+    'JTI_CLAIM': 'jti',
+
+    # Security leeway for potential timing discrepancies
+    'LEEWAY': 30,  # Allow a 30-second leeway for clock discrepancies
+}
+
 
 AUTH_COOKIE = 'access'
-AUTH_COOKIE_MAX_AGE = 60 * 60 * 24
+AUTH_COOKIE_MAX_AGE = 60 * 60 * 60 * 24
 AUTH_COOKIE_SECURE = False
 AUTH_COOKIE_HTTP_ONLY = True
 AUTH_COOKIE_PATH = '/'

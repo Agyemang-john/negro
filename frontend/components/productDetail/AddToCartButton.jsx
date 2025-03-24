@@ -8,11 +8,12 @@ import { toast } from 'react-toastify';
 const AddToCartButton = ({ isInCart, productId, variantId, quantityInCart }) => {
   const [addToCart, { isLoading, error, data }] = useAddToCartMutation();
   const [inCart, setInCart] = useState(isInCart);
-  const [quantity, setQuantity] = useState(quantityInCart|| 1);
+  const [quantity, setQuantity] = useState(quantityInCart);
 
   useEffect(() => {
     setInCart(isInCart);
-  }, [isInCart]);
+    setQuantity(quantityInCart);
+  }, [isInCart, quantityInCart]);
 
   const handleAddToCart = async (change) => {
     try {
