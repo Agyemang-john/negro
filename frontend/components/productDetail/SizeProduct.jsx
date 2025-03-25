@@ -42,6 +42,7 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
     const handleClose = () => setOpen(false);
     const { isAuthenticated } = useAppSelector(state => state.auth);
     const [address, setAddress] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
     
    
     const [variantImages, setVariantImages] = useState(data?.variant_data?.variant_images);
@@ -53,6 +54,7 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
     const [allImages, setAllImages] = useState(data?.p_images);
     const [mainImage, setMainImage] = useState(data?.variant_data?.variant?.image);
     const [error, setError] = useState(null);
+    const [sizeName, setSizeName] = useState(variantDetail?.size.name);
 
     const [openchart, setOpenChart] = React.useState(false);
     const [scroll, setScroll] = React.useState('paper');
@@ -67,6 +69,7 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
     }
 
     const fetchProductData = async (variantId) => {
+      setIsLoading(true)
       try {
         const url = new URL(`${process.env.NEXT_PUBLIC_HOST}/api/v1/product/${sku}/${slug}/`);
         if (variantId) url.searchParams.append("variantid", variantId);
@@ -75,7 +78,7 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
         const data = await res.json();
 
         console.log(data);
-
+        setSizeName(data?.variant_data?.variant.size.name);
         setIsInCart(data?.is_in_cart);
         setCartQuantity(data?.cart_quantity);
         setSizeDetail(data.variant_data.sizes);
@@ -84,9 +87,12 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
         setVariantDetail(data?.variant_data?.variant);
         setAllImages(data?.p_images);
         setVariantImages(data?.variant_data?.variant_images);
+        
       } catch (error) {
         console.error('Error fetching product data:', error);
         setError('Failed to load product data');
+      } finally {
+        setIsLoading(false);
       }
     };
   
@@ -94,7 +100,7 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
 
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.set("variantid", newVariantId);
-      router.replace(newUrl.toString(), { scroll: true });
+      router.replace(newUrl.toString(), { scroll: false });
 
       fetchProductData(newVariantId);
     };
@@ -102,6 +108,13 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
     const onSelect = (v) => {
         handleVariantChange(v);
     };
+
+    const nameShow = (variant) => {
+      setSizeName(variant.size.name);
+    }
+    const nameRemove = () => {
+      setSizeName(variantDetail?.size.name);
+    }
 
 
   return (
@@ -140,14 +153,27 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
 
                             <div id="product-zoom-gallery" className="product-image-gallery">
                                 <Link className="product-gallery-item active" href="#" >
-                                    <img onClick={() => setMainImage(productDetail.image)} src={`${productDetail.image}`} alt="product side" />
+                                    <img 
+                                      style={{ 
+                                        border: mainImage === productDetail.image ? "2px solid grey" : "1px solid grey",
+                                      }} 
+                                      onClick={() => setMainImage(productDetail.image)} 
+                                      src={`${productDetail.image}`} 
+                                      alt="product side" />
                                 </Link>
 
                                 {variantImages.length === 0 ? (
                                   <>
                                     {allImages && allImages.map((p) => (
                                         <Link href={'#'} key={p.id} className="product-gallery-item">
-                                            <img onClick={() => setMainImage(p.images)} src={`${p.images}`} alt="product cross" />
+                                            <img 
+                                              style={{ 
+                                                border: mainImage === p.images ? "2px solid grey" : "1px solid grey",
+                                              }}
+                                              onClick={() => setMainImage(p.images)} 
+                                              src={`${p.images}`} 
+                                              alt="product cross" 
+                                            />
                                         </Link>
                                     ))}
                                   </>
@@ -155,7 +181,14 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
                                   <>
                                     {variantImages && variantImages.map((p) => (
                                       <Link href={'#'} key={p.id} className="product-gallery-item" >
-                                            <img onClick={() => setMainImage(p.images)} src={`${p.images}`} alt="product cross" />
+                                            <img 
+                                              style={{ 
+                                                border: mainImage === p.images ? "2px solid grey" : "1px solid grey",
+                                              }}
+                                              onClick={() => setMainImage(p.images)} 
+                                              src={`${p.images}`} 
+                                              alt="product cross" 
+                                            />
                                       </Link>
                                     ))}
                                   </>
@@ -185,34 +218,54 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
                             <div className="d-flex justify-content-between mb-2">
                                 <div className="d-flex justify-content-between">
                                     <span for="size-guide">Selected:  </span> &nbsp;&nbsp;
-                                    <span id="selected_variant" className="fw-bold">Size {variantDetail.size.name}</span>
+                                    <span id="selected_variant" className="fw-bold">{sizeName}</span>
                                 </div>
                                 <span style={{ cursor: 'pointer'}} className="chart_link"><a id="sizeChart-button" onClick={handleClickOpen('paper')}><AssignmentIcon />size guide</a></span>
                             </div>
 
-                            <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
+                            <Grid container spacing={1} sx={{ mb: 1 }}>
                               {sizeDetail.map((variant) => (
-                                <Button
-                                  key={variant.id}
-                                  variant={variantDetail?.id === variant.id ? "outlined" : "outlined"}
-                                  sx={{
-                                    borderRadius: 2,
-                                    textTransform: "none",
-                                    fontWeight: "bold",
-                                    border: variantDetail?.id === variant.id ? "1px dark.300 solid" : "none",
-                                    bgcolor: variantDetail?.id === variant.id ? "white" : "white",
-                                    color: "black",
-                                    "&:hover": {
-                                      bgcolor: "grey.300",
-                                    },
-                                    minWidth: 80,
-                                  }}
-                                  onClick={() => onSelect(variant?.id)}
-                                >
-                                  {variant.size.name}
-                                </Button>
+                                <Grid size={{ sm: 3, xs: 3 }} key={variant.id}>
+                                  <Button
+                                    variant={variantDetail?.id === variant.id ? "outlined" : "outlined"}
+                                    disabled={isLoading}
+                                    sx={{
+                                      position: "relative",
+                                      borderRadius: 2,
+                                      textTransform: "none",
+                                      fontWeight: "bold",
+                                      border: variantDetail?.id === variant.id ? "2px solid black" : "1px solid grey",
+                                      bgcolor: variantDetail?.id === variant.id ? "white" : "white",
+                                      color: "black",
+                                      "&:hover": {
+                                        bgcolor: "grey.300",
+                                      },
+                                      minWidth: 85,
+                                      overflow: "hidden",
+                                      ...(variant.quantity < 1 && {
+                                        pointerEvents: "none",
+                                        opacity: 0.6,
+                                        "&::after": {
+                                          content: '""',
+                                          position: "absolute",
+                                          top: "50%",
+                                          left: 0,
+                                          width: "100%",
+                                          height: "2px",
+                                          backgroundColor: "black",
+                                          transform: "rotate(-45deg)",
+                                        } 
+                                      })
+                                    }}
+                                    onClick={() => onSelect(variant?.id)}
+                                    onMouseOver={() => nameShow(variant)}
+                                    onMouseLeave={() => nameRemove()}
+                                  >
+                                    {variant.size.name}
+                                  </Button>
+                                </Grid>
                               ))}
-                            </Box>
+                            </Grid>
 
                             <div className='d-lg-none' style={{ margin: '10px', padding: 0 }}>
                               <AddToCartButton

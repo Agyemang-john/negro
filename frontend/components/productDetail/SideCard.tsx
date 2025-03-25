@@ -71,12 +71,12 @@ export default function ProductCard({
 
 
   return (
-    <Box sx={{ mx: "auto", mb: 1 }}>
-      <Card sx={{ p: 2, borderRadius: 3, boxShadow: 0 }}>
+    <Box sx={{ mb: 1 }}>
+      <Card sx={{ p: 1, borderRadius: 3, boxShadow: 0 }}>
         {variant ? (
-            <Typography variant="h4" fontWeight="bold">GHS{variant.price.toFixed(2)}</Typography>
+            <Typography variant="h4" fontWeight="bold">₵{variant.price.toFixed(2)}</Typography>
         ): (
-            <Typography variant="h4" fontWeight="bold">GHS{product.price.toFixed(2)}</Typography>
+            <Typography variant="h4" fontWeight="bold">₵{product.price.toFixed(2)}</Typography>
         )}
         <Typography variant="body2" color="text.secondary">
           Price when purchased online <InfoOutlinedIcon/>
@@ -90,21 +90,21 @@ export default function ProductCard({
 
         <Typography sx={{ mt: 1 }} variant="subtitle1" fontWeight="bold">How you'll get this item:</Typography>
         <Grid container spacing={1} sx={{ mt: 1 }}>
-          <Grid size={{ sm: 4 }}>
+          <Grid size={{ sm: 4, xs: 4 }}>
             <Card sx={{ textAlign: "center", p: 1, border: "2px solid black" }}>
               <LocalShippingIcon />
               <Typography variant="body2">Shipping</Typography>
               <Typography variant="caption" color="success.main">Free</Typography>
             </Card>
           </Grid>
-          <Grid size={{ sm: 4 }} >
+          <Grid size={{ sm: 4, xs: 4 }} >
             <Card sx={{ textAlign: "center", p: 1 }}>
               <StorefrontIcon />
               <Typography variant="body2">Pickup</Typography>
               <Typography variant="caption" color="text.secondary">Not available</Typography>
             </Card>
           </Grid>
-          <Grid size={{ sm: 4 }}>
+          <Grid size={{ sm: 4, xs: 4 }}>
             <Card sx={{ textAlign: "center", p: 1 }}>
               <DeliveryDiningIcon />
               <Typography variant="body2">Delivery</Typography>
@@ -130,7 +130,7 @@ export default function ProductCard({
                 <Typography
                     variant="body2"
                     color="text.secondary"
-                    sx={{ cursor: "pointer", ml: 1, "&:hover": { textDecoration: "underline" } }}
+                    sx={{ cursor: "pointer", ml: 1, "&:hover": { textDecoration: "underline" }, textDecoration: "underline" }}
                     onClick={handleOpen}
                     >
                     Change
