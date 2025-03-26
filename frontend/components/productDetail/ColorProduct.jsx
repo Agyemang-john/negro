@@ -3,7 +3,7 @@
 import React, {useEffect, useState} from 'react'
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import Link from 'next/link';
-import ReactImageMagnify from 'react-image-magnify';
+import ProductImage from "./ProductImage";
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import AddToCartButton from './AddToCartButton';
 
@@ -85,25 +85,7 @@ const ColorProduct = ({ productData, handleFollowToggle, isFollowing, followerCo
                         <div className="product-gallery">
                         <figure className="product-main-image">
                               <span className="product-label label-top">Top</span>
-                                <ReactImageMagnify
-                                  
-                                  {...{
-                                    smallImage: {
-                                      alt: 'Product Image',
-                                      isFluidWidth: true,
-                                      src: mainImage,
-                                    },
-                                    largeImage: {
-                                      src: mainImage,
-                                      width: 1300,
-                                      height: 1300,
-                                    },
-                                  }}
-                                  style={{
-                                    position: 'relative', // Required for z-index to work
-                                    zIndex: 10,           // Adjust the z-index as needed
-                                  }}
-                                />
+                              <ProductImage mainImage={mainImage} />
                               <a herf="#" id="btn-product-gallery" className="btn-product-gallery">
                               <ZoomInIcon />
                               </a>

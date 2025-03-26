@@ -3,8 +3,8 @@
 import React, {useEffect, useState} from 'react';
 import { useFollowToggle } from '@/hooks/useFollowToggle';
 import Link from "next/link";
-import ReactImageMagnify from 'react-image-magnify';
 import AddToCartButton from './AddToCartButton';
+import ProductImage from "./ProductImage";
 
 import Rating from '@mui/material/Rating';
 import XIcon from '@mui/icons-material/X';
@@ -61,28 +61,7 @@ const NoneProduct = ({ productData, handleFollowToggle, isFollowing, followerCou
                         <div className="product-gallery">
                           <figure className="product-main-image">
                             <span className="product-label label-top">Top</span>
-                              <ReactImageMagnify
-                                
-                                {...{
-                                  smallImage: {
-                                    alt: 'Product Image',
-                                    isFluidWidth: true,
-                                    src: mainImage,
-                                  },
-                                  largeImage: {
-                                    src: mainImage,
-                                    width: 1300,
-                                    height: 1300,
-                                  },
-                                }}
-                                style={{
-                                  position: 'relative', // Required for z-index to work
-                                  zIndex: 10,           // Adjust the z-index as needed
-                                }}
-                              />
-                            <a herf="#" id="btn-product-gallery" className="btn-product-gallery">
-                            <ZoomInIcon />
-                            </a>
+                            <ProductImage mainImage={mainImage} />
                         </figure>
 
                             <div id="product-zoom-gallery" className="product-image-gallery">

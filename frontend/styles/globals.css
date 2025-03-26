@@ -132,3 +132,24 @@ body {
     height: 37px;
   }
 }
+
+.image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 400px;
+  height: 400px;
+  position: relative;
+  border: 1px solid #ddd;
+}
+
+.small-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.enlarged-image {
+  border: 1px solid #ddd;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
