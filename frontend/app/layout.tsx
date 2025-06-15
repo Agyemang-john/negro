@@ -1,14 +1,18 @@
 
-import '../styles/globals.css';
-import '../styles/bootstrap.min.css';
-import '../styles/style.css';
-import '../styles/demo-3.css';
-import '../js/main.js';
+import '@/styles/globals.css';
+import '@/styles/bootstrap.min.css';
+import '@/styles/style.css';
+import '@/styles/demo-3.css';
+import '@/js/main.js';
 import type { Metadata } from 'next';
+import { verifyUserServer } from '@/utils/auth';
+import { createServerAxios } from '@/lib/serverFetch';
+
 import Provider from '@/redux/provider';
 import { Setup } from '@/components/utils';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { getUserAndCart } from '@/lib/getUserAndCart';
 
 
 export const metadata: Metadata = {
@@ -19,17 +23,24 @@ export const metadata: Metadata = {
   }
 };
 
-export default function RootLayout({
+
+
+export default async function RootLayout({
 	children,
 }: {
 	children: React.ReactNode;
 }) {
+
+
+  const { user, cartCount } = await getUserAndCart();
+
   return (
+
     <html lang="en">
       <body>
         <Provider>
           <Setup />
-          <Header />
+          <Header user={user} cartCount={cartCount}/>
           {children}
           <Footer />
         </Provider>

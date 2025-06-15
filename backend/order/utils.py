@@ -1,3 +1,15 @@
+
+import json
+import logging
+from rest_framework.response import Response
+from rest_framework import status
+from product.models import Product, Variants
+from .models import Cart
+from product.serializers import ProductSerializer, VariantSerializer
+from .serializers import CartItemSerializer
+
+logger = logging.getLogger(__name__)
+
 from django.http import JsonResponse
 from django.db import transaction
 from django.http import JsonResponse
@@ -73,3 +85,42 @@ def transfer_cart_to_user(request, user):
         
     return True
 
+def merge_guest_cart_with_user_cart(request):
+    """
+    Merge the guest cart (from cookie) with the authenticated user's database cart.
+    Only runs if user is authenticated.
+    """
+    guest_cart_header = request.headers.get('X-Guest-Cart')
+    if not guest_cart_header:
+        return
+
+    try:
+        guest_cart = json.loads(guest_cart_header) if guest_cart_header else []
+    except (json.JSONDecodeError, TypeError) as e:
+        logger.warning(f"Invalid guest cart data: {e}")
+        return
+
+    if not guest_cart:
+        return
+
+    cart = Cart.objects.get_or_create_for_request(request)
+
+    for item in guest_cart:
+        try:
+            product_id = item.get("p")
+            quantity = int(item.get("q", 0))
+            variant_id = item.get("v")
+
+            if quantity <= 0:
+                continue
+
+            product = Product.objects.get(id=product_id, status="published")
+
+            variant = None
+            if variant_id:
+                variant = Variants.objects.get(id=variant_id, product=product)
+
+            cart.add_item(product, quantity, variant)
+
+        except Exception as e:
+            logger.warning(f"Error merging guest cart item: {e}")

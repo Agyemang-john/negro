@@ -674,59 +674,6 @@ def get_or_create_cart(user, request):
 
 from rest_framework.exceptions import NotFound, ValidationError
 
-class AddToCartView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        user = request.user
-        data = request.data
-
-        product_id = data.get('product_id')
-        variant_id = data.get('variant_id')
-        quantity = int(data.get('quantity', 1))
-
-        # Validate product
-        try:
-            product = Product.objects.get(id=product_id)
-        except Product.DoesNotExist:
-            raise NotFound(detail="Product not found.")
-
-        # If variant_id is provided, validate the variant
-        variant = None
-        if variant_id:
-            try:
-                variant = Variants.objects.get(id=variant_id, product=product)
-            except Variants.DoesNotExist:
-                raise ValidationError(detail="Variant not found or does not belong to the specified product.")
-
-        # Retrieve or create the user's cart
-        cart = Cart.objects.filter(user=user).first()
-        if not cart:
-            cart = Cart.objects.create(user=user)
-
-        # Get the default delivery option for the product
-        default_delivery_option = ProductDeliveryOption.objects.filter(
-            product=product, default=True
-        ).first()
-
-        # Add the product (with or without a variant) to the cart with the default delivery option
-        cart_item, created = CartItem.objects.get_or_create(
-            cart=cart,
-            product=product,
-            variant=variant if variant else None,
-            defaults={
-                'quantity': quantity,
-                'delivery_option': default_delivery_option.delivery_option if default_delivery_option else None
-            }
-        )
-        if not created:
-            # If the item already exists, increase the quantity
-            cart_item.quantity += quantity
-            cart_item.save()
-
-        return Response({"message": "Item added to cart successfully."})
-
-
 
 
 class RemoveFromCartView(APIView):

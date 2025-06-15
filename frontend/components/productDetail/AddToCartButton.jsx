@@ -1,29 +1,54 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { addToCart } from "@/lib/cart";
+import { useAppSelector, useAppDispatch } from '@/redux/hooks';
+import { updateGuestCart, getGuestCartItem } from './../../app/cart/_lib/cart';
 import { useAddToCartMutation } from "@/redux/productApi/cartApiSlice";
 import { toast } from 'react-toastify';
 
-const AddToCartButton = ({ isInCart, productId, variantId, quantityInCart }) => {
-  const [addToCart, { isLoading, error, data }] = useAddToCartMutation();
-  const [inCart, setInCart] = useState(isInCart);
-  const [quantity, setQuantity] = useState(quantityInCart);
 
+const AddToCartButton = ({ isInCart, productId, variantId, quantityInCart, isOutOfStock }) => {
+  const { isAuthenticated } = useAppSelector(state => state.auth);
+  const [addToCart] = useAddToCartMutation();
+  const [inCart, setInCart] = useState(isInCart);
+  const [outOfStock, setOutOfStock] = useState(isOutOfStock);
+  const [quantity, setQuantity] = useState(quantityInCart);
+  const [isLoading, setIsLoading] = useState(false);
+  console.log("Add to cart status 222: ", inCart)
+  console.log("Add to cart status: ", isInCart)
+  console.log(quantityInCart)
+
+  // Initialize from cookies if guest user
   useEffect(() => {
-    setInCart(isInCart);
-    setQuantity(quantityInCart);
-  }, [isInCart, quantityInCart, variantId]);
+      setInCart(isInCart);
+      setQuantity(quantityInCart);
+      setOutOfStock(isOutOfStock);
+  }, [isInCart, quantityInCart, variantId, isOutOfStock]);
 
   const handleAddToCart = async (change) => {
+    setIsLoading(true);
     try {
-      const response = await addToCart({ product_id: productId, variant_id: variantId, quantity: change }).unwrap();
+      let response;
+      
+      if (isAuthenticated) {
+        response = await addToCart({ 
+          product_id: productId, 
+          variant_id: variantId, 
+          quantity: change 
+        }).unwrap();
+      } else {
+        response = updateGuestCart(productId, change, variantId);
+      }
+
       toast.success(response.message);
       setInCart(response.is_in_cart);
       setQuantity(response.quantity);
+      setOutOfStock(response.is_out_of_stock || null);
     } catch (err) {
       toast.error(err.data?.detail || "Item was not added to cart");
       console.error('Failed to add to cart:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -32,7 +57,7 @@ const AddToCartButton = ({ isInCart, productId, variantId, quantityInCart }) => 
       {!inCart ? (
         <div id="button_toggle">
           <button
-            disabled={isLoading}
+            disabled={outOfStock || isLoading}
             title="Add to shopping Cart"
             onClick={() => handleAddToCart(1)}
             className="cart-btn shadow w-100"
@@ -49,9 +74,9 @@ const AddToCartButton = ({ isInCart, productId, variantId, quantityInCart }) => 
           >
             -
           </button>
-          <input className="quantity_total_" type="text" value={quantity} readOnly />
+          <input className="quantity_total_" min={0} type="text" value={quantity} readOnly />
           <button
-            disabled={isLoading}
+            disabled={outOfStock || isLoading}
             className="plus-button shadow"
             onClick={() => handleAddToCart(1)}
           >

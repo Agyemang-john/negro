@@ -24,6 +24,7 @@ import VerifiedIcon from '@mui/icons-material/Verified';
 interface Vendor {
     name: string;
     is_subscribed: boolean;
+    slug: string;
 }
 
 interface Variant {
@@ -42,6 +43,7 @@ interface Address {
 
 interface ProductCardProps {
   isInCart: boolean;
+  isOutOfStock: boolean;
   cartQuantity: number;
   product: Product;
   followerCount: number;
@@ -55,6 +57,7 @@ interface ProductCardProps {
 
 export default function ProductCard({
   isInCart,
+  isOutOfStock,
   cartQuantity,
   followerCount,
   isFollowing,
@@ -84,7 +87,7 @@ export default function ProductCard({
         <Typography variant="body2" sx={{ display: "flex", alignItems: "center", mt: 1 }}>
           <LocalShippingIcon fontSize="small" sx={{ mr: 0.5 }} /> Free shipping
         </Typography>
-        <AddToCartButton isInCart={isInCart} productId={product.id} variantId={variant ? variant.id : null} quantityInCart={cartQuantity} />
+        <AddToCartButton isInCart={isInCart} productId={product.id} variantId={variant ? variant.id : null} quantityInCart={cartQuantity} isOutOfStock={isOutOfStock} />
 
         <Divider  sx={{ mt: 1 }}/>
 
@@ -161,7 +164,7 @@ export default function ProductCard({
                 </Typography>
                 
                 {/* a to seller info */}
-                <Link href='#' color="info">
+                <Link href={`/seller/${product.vendor.slug}`} color="info">
                     View Seller Info
                 </Link>
             </Box>

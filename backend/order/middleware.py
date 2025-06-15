@@ -2,10 +2,7 @@ import uuid
 from django.utils.deprecation import MiddlewareMixin
 from django.conf import settings
 
-
-
-
-
+ 
 class CartIDMiddleware(MiddlewareMixin):
     """
     Middleware to ensure every user (guest or authenticated) has a `cart_id` cookie.
@@ -22,6 +19,6 @@ class CartIDMiddleware(MiddlewareMixin):
                 path="/",
                 secure=not settings.DEBUG,  # Secure in production
                 httponly=True,
-                samesite="Lax",
+                samesite="None",
             )
         return response

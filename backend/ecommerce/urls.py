@@ -23,7 +23,7 @@ urlpatterns = [
     path("api/v1/payments/", include("payments.urls")),
     path("api/v1/order/", include("order.urls")),
     path("api/v1/address/", include("address.urls")),
-    path("api/v1/", include("vendor.urls")),
+    path("api/v1/vendor/", include("vendor.urls")),
     path("", include("product.urls")),
     path("ckeditor/", include("ckeditor_uploader.urls")),   
 ]

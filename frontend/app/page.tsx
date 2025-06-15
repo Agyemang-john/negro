@@ -1,6 +1,6 @@
-import HomeBanner from "../components/HomeBanner";
-import HomeCarousel from "../components/HomeCarousel";
-import HomeBrowsingHistory from "../components/productComponents/HomeBrowsingHistory";
+import HomeBanner from "../../components/HomeBanner";
+import HomeCarousel from "../../components/HomeCarousel";
+import HomeBrowsingHistory from "../../components/productComponents/HomeBrowsingHistory";
 import Divider from "@mui/material/Divider";
 import Grid from "@mui/material/Grid2";
 import ProductCarousel from "@/components/productComponents/ProductCarousel";
@@ -61,6 +61,8 @@ export default async function Home() {
 					</div>
 
 					<Grid container spacing={2}>
+						<HomeBrowsingHistory />
+						<HomeBrowsingHistory />
 						<HomeBrowsingHistory />
 					</Grid>
 

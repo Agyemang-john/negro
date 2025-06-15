@@ -8,6 +8,8 @@ load_dotenv()  # Load environment variables from .env file
 env = environ.Env(
     DEBUG=(bool, False)
 )
+from corsheaders.defaults import default_headers
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -54,7 +56,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'order.middleware.CartIDMiddleware',
+    # 'order.middleware.CartIDMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -127,6 +129,8 @@ REST_FRAMEWORK = {
     #     'user': '1000/day',
     # }
 }
+
+ 
 
 
 
@@ -245,6 +249,16 @@ DJOSER = {
 
 from datetime import timedelta
 
+AUTH_COOKIE = 'access'
+AUTH_ACCESS_MAX_AGE = timedelta(hours=1).total_seconds()
+AUTH_REFRESH_MAX_AGE = timedelta(days=60).total_seconds()
+AUTH_COOKIE_SECURE = False
+AUTH_COOKIE_HTTP_ONLY = True
+AUTH_COOKIE_PATH = '/'
+AUTH_COOKIE_SAMESITE = 'Lax'
+
+from datetime import timedelta
+
 SIMPLE_JWT = {
     # Access Token Lifetime - 1 hour to balance security and UX
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
@@ -256,7 +270,7 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     
     # Blacklist old refresh tokens after they are rotated
-    'BLACKLIST_AFTER_ROTATION': True,
+    'BLACKLIST_AFTER_ROTATION': False,
     
     # Algorithm for signing the JWT
     'ALGORITHM': 'HS256',
@@ -269,6 +283,9 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME': timedelta(hours=1),  # Sliding token lifetime 1 hour
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=60),  # Refresh token sliding window
     
+    # Token user class (use custom user model if required)
+    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
+    
     # Enable JTI claim for each token (JWT ID)
     'JTI_CLAIM': 'jti',
 
@@ -276,24 +293,19 @@ SIMPLE_JWT = {
     'LEEWAY': 30,  # Allow a 30-second leeway for clock discrepancies
 }
 
-
-AUTH_COOKIE = 'access'
-AUTH_COOKIE_MAX_AGE = 60 * 60 * 60 * 24
-AUTH_COOKIE_SECURE = False
-AUTH_COOKIE_HTTP_ONLY = True
-AUTH_COOKIE_PATH = '/'
-AUTH_COOKIE_SAMESITE = 'Lax'
-
-
-SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
-SESSION_COOKIE_SECURE = False
-SESSION_COOKIE_HTTPONLY = True
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_COOKIE_SAMESITE = 'Lax'
-SESSION_SAVE_EVERY_REQUEST = True 
-SESSION_COOKIE_PATH = '/'
-
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Next.js frontend URL
 ]
+# CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS.copy()
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "x-guest-cart",
+    "x-ssr-refresh",
+    'cache-control'
+]
+
+
+# SESSION_COOKIE_SAMESITE = 'None'
+# SESSION_COOKIE_HTTPONLY = True
+# SESSION_COOKIE_SECURE = False  # True in production

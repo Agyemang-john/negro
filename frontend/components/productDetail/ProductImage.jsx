@@ -3,7 +3,7 @@ import ReactImageMagnify from "react-image-magnify";
 
 const ProductImage = ({ mainImage }) => {
   return (
-    <div style={{ width: "400px", position: "relative", zIndex: 10 }}>
+    <div style={{ width: "100%", position: "relative", zIndex: 10 }}>
       <ReactImageMagnify
         {...{
           smallImage: {
@@ -18,7 +18,7 @@ const ProductImage = ({ mainImage }) => {
           },
           enlargedImageContainerDimensions: {
             width: "150%",
-            height: "100%",
+            height: "150%",
           },
         }}
       />

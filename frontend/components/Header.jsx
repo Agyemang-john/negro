@@ -7,24 +7,33 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PersonIcon from '@mui/icons-material/Person';
 import SearchIcon from '@mui/icons-material/Search';
 import MenuIcon from '@mui/icons-material/Menu';
-// import { getCartQuantity, addToCart, removeFromCart } from '@/lib/cart';
-import Grid from '@mui/material/Grid';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import { useLogoutMutation, useRetrieveUserQuery } from '@/redux/features/authApiSlice';
-import { logout as setLogout } from '@/redux/features/authSlice';
+import { hydrateAuth, logout as setLogout } from '@/redux/features/authSlice';
 import { useGetCartQuery } from '@/redux/productApi/cartApiSlice';
+import  { setCartFromServer } from '@/redux/productApi/cartSlice';
 
 
 
-function Header() {
-    const { data: cart, isLoading: isCartLoading } = useGetCartQuery();
-    const { data: user, isLoading: isUserLoading } = useRetrieveUserQuery();
+function Header({ user, cartCount}) {
+
+    const { data: cartData, isSuccess } = useGetCartQuery();
 
     const dispatch = useAppDispatch();
 
 	const [logout] = useLogoutMutation();
 
-	const { isAuthenticated } = useAppSelector(state => state.auth);
+    const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
+
+    // // Use navInfo.name as fallback while Redux loads
+
+    // const { data: cart } = useGetCartQuery(undefined, {
+    //     // pollingInterval: 10000, // optional live updates
+    //     // refetchOnFocus: true,
+    // });
+    // const { data: user } = useRetrieveUserQuery(undefined, {})
+    // const quantity = cart?.quantity;
+
 
 	const handleLogout = () => {
 		logout(undefined)
@@ -33,6 +42,24 @@ function Header() {
 				dispatch(setLogout());
 			});
 	};
+
+    useEffect(() => {
+		if (user) {
+			dispatch(hydrateAuth({ name: user.first_name }))
+		}
+		if (cartCount !== undefined) {
+			dispatch(setCartFromServer(cartCount))
+		}
+        if (isSuccess && cartData?.quantity !== undefined) {
+            dispatch(setCartFromServer(cartData.quantity));
+        }
+	}, [user, cartCount, isSuccess, cartData, dispatch])
+
+	// Access Redux state for fallback
+	const reduxName = useAppSelector(state => state.auth.name)
+	const reduxCartCount = useAppSelector(state => state.cart.totalQuantity)
+
+    
 
     return (
 
@@ -128,24 +155,21 @@ function Header() {
                                     <span className="wishlist-count badge">3</span>
                                 </div>
                                 <p title="Dashboard">
-                                    {isUserLoading ? (
-                                        '...'
-                                    ) : isAuthenticated && user ? (
-                                        `Hello, ${user.first_name}`
-                                    ) : (
-                                        'Login!'
-                                    )}
+                                {reduxName || user?.first_name ? (
+                                    `Hello, ${reduxName || user.first_name}`
+                                ) : (
+                                    "Welcome, Guest"
+                                )}
                                 </p>
                             </Link>
                         </div>
 
                         <div className="dropdown cart-dropdown">
-                            <Link href={'/'} className="dropdown-toggle">
+                            <Link href={'/cart'} className="dropdown-toggle">
                                 <div className="icon">
                                     <ShoppingCartIcon fontSize="large"/>
                                     <span id="cart_count" className="cart-count">
-                                    {/* {cartCount} */}
-                                    {isCartLoading ? '...' : cart?.quantity || 0}
+                                    {cartCount ?? reduxCartCount ?? 0}
                                     </span> {/* Replace with actual cart count */}
                                 </div>
                                 <p>Cart</p>

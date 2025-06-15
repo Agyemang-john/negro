@@ -43,6 +43,7 @@ const SizeColorProduct = ({ productData, handleFollowToggle, isFollowing, follow
     const { isAuthenticated } = useAppSelector(state => state.auth);
 
     const [variantImages, setVariantImages] = useState(productData?.variant_data?.variant_images);
+    const [isOutOfStock, setIsOutOfStock] = useState(productData?.is_out_of_stock);
     const [isInCart, setIsInCart] = useState(productData?.is_in_cart);
     const [cartQuantity, setCartQuantity] = useState(productData?.cart_quantity);
     const [productDetail, setProductDetail] = useState(productData?.product);

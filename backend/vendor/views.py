@@ -35,7 +35,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from .models import OpeningHour, Vendor
-from .serializers import OpeningHourSerializer
+from core.serializers import VendorSerializer as VendorDetail, ProductReviewSerializer as ReviewDetail
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.db import transaction
 from rest_framework.exceptions import NotFound
@@ -149,10 +149,9 @@ class VendorDetailView(APIView):
             return Response({'error': 'Vendor not found'}, status=status.HTTP_404_NOT_FOUND)
 
         # Serialize the vendor data
-        vendor_serializer = VendorSerializer(vendor)
+        vendor_serializer = VendorDetail(vendor, context={'request': request})
         
         # Serialize the products
-        product_serializer = ProductSerializer(products, many=True)
 
         reviews = ProductReview.objects.filter(product__in=products, status=True).order_by("-date")
         average_rating = reviews.aggregate(Avg('rating'))['rating__avg']
@@ -163,10 +162,10 @@ class VendorDetailView(APIView):
             product_colors = product_variants.values('color__name', 'color__code', 'sku').distinct()
 
             product_data = {
-                'product': ProductSerializer(product).data,  # Serialize the product instance
+                'product': ProductSerializer(product, context={'request': request}).data,  # Serialize the product instance
                 'average_rating': product.average_rating or 0,
                 'review_count': product.review_count or 0,
-                'variants': VariantsSerializer(product_variants, many=True).data,
+                'variants': VariantsSerializer(product_variants, many=True, context={'request': request}).data,
                 'colors': list(product_colors),  # ensure list is serialized correctly
             }
             products_with_details.append(product_data)
@@ -185,8 +184,8 @@ class VendorDetailView(APIView):
             'vendor': vendor_serializer.data,
             'products': products_with_details,
             'average_rating': average_rating,
-            "reviews": ProductReviewSerializer(reviews, many=True).data,
-            'today_operating_hours': OpeningHourSerializer(today_operating_hours).data,
+            "reviews": ReviewDetail(reviews, many=True, context={'request': request}).data,
+            'today_operating_hours': OpeningHourSerializer(today_operating_hours, context={'request': request}).data,
             'followers_count': vendor.followers.count(),
             'is_following': is_following,
         }

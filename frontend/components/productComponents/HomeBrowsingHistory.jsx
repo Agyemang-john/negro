@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from 'react';
+import Cookies from 'js-cookie';
 import { Box, Card, CardMedia, CardContent, Typography, Skeleton } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import Link from 'next/link';
@@ -16,12 +17,19 @@ export default function HomeBrowsingHistory() {
   useEffect(() => {
     async function fetchBrowsingHistory() {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_HOST}/api/viewed-products/`, {
-          cache: "no-store", // Avoid caching for dynamic content
-        });
-        setProducts(response.data.recently_viewed || []);
+        const viewed = Cookies.get('recently_viewed');
+        if (!viewed) return;
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/product/recently-viewed-products/?ids=${viewed}`,
+          {
+            cache: 'no-store',
+          }
+        );
+        const data = await response.json();
+        setProducts(data || []);
       } catch (error) {
-        // console.error('Failed to fetch browsing history:', error);
+        // Optionally log error
       } finally {
         setLoading(false);
       }
@@ -31,46 +39,48 @@ export default function HomeBrowsingHistory() {
   }, []);
 
   return (
-    <Box>
-      <Typography sx={{ fontWeight: 'bold', mb: 2 }} variant="h5">
-        Your Browsing History
-      </Typography>
-
-      {loading ? (
-        <Grid container spacing={2}>
-          {[...Array(4)].map((_, index) => (
-            <Grid size={{ xs: 6 }} key={index}>
-              <Skeleton sx={{ borderRadius: '10px' }} variant="rectangular" height={50} />
-              <Skeleton variant="text" />
+      <Grid sx={{ boxShadow: 'none', border: 'none' }} size={{ xs: 12, md: 4, lg: 4 }}>
+        <Card sx={{ boxShadow: 'none', border: 'none' }}>
+          <CardContent>
+            <Typography sx={{ fontWeight: 'bold', mb: 2 }} variant="h5">
+              Your Browsing History
+            </Typography>
+            <Grid container spacing={0.5}>
+              {loading ? (
+                <Grid container spacing={2}>
+                  {[...Array(4)].map((_, index) => (
+                    <Grid size={{ xs: 6 }} key={index}>
+                      <Skeleton sx={{ borderRadius: '10px' }} animation="wave" variant="rectangular" width={150} height={150} />
+                      <Skeleton animation="wave" variant="text" width="50%" />
+                    </Grid>
+                  ))}
+                </Grid>
+              ) : (
+                <Grid container spacing={2}>
+                  {products && products.slice(0, 4).map((product) => (
+                    <Grid size={{ xs: 6, md: 6 }} key={product.id}>
+                      <Link
+                        href={`/${product.sku}/${product.slug}`}
+                        style={{ textDecoration: 'none' }}
+                      >
+                          <CardMedia
+                            component="img"
+                            height="200"
+                            image={product.image}
+                            alt={product.title}
+                          />
+                            <Typography variant="body2" align="center">
+                              {truncateText(product.title, 20)}
+                            </Typography>
+                      </Link>
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
             </Grid>
-          ))}
-        </Grid>
-      ) : (
-        <Grid container spacing={2}>
-          {products && products.map((product) => (
-            <Grid sx={{ boxShadow: 'none', border: 'none', }} size={{ xs: 12, md: 4, lg: 4 }}>
-              <Link
-                href={`/${product.slug}/${product.id}/${product.sub_category.slug}`}
-                style={{ textDecoration: 'none' }}
-              >
-                <Card>
-                  <CardMedia
-                    component="img"
-                    height="200"
-                    image={product.image}
-                    alt={product.title}
-                  />
-                  <CardContent>
-                    <Typography variant="body2" align="center">
-                      {truncateText(product.title, 28)}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Link>
-            </Grid>
-          ))}
-        </Grid>
-      )}
-    </Box>
+            {/* <Link to={"/user/dashboard/recently-viewed-products"}>See all</Link> */}
+          </CardContent>
+        </Card>
+      </Grid>
   );
 }

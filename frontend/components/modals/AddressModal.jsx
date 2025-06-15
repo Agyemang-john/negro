@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Box from '@mui/material/Box';
+import axiosClient from '@/lib/clientFetch';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
@@ -8,7 +9,7 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import TextField from '@mui/material/TextField';
 import Swal from 'sweetalert2';
-import axios from 'axios';
+
 const AddressModal = ({
   open,
   handleClose,
@@ -52,7 +53,7 @@ const AddressModal = ({
   // Function to fetch address details for editing
   const fetchAddressDetails = async (id) => {
     try {
-      const response = await axios.get(`/api/v1/address/addresses/${id}/`);
+      const response = await axiosClient.get(`${process.env.NEXT_PUBLIC_HOST}/api/v1/address/addresses/${id}/`);
       const address = response.data;
 
       // Populate fields with the fetched address data
@@ -115,8 +116,8 @@ const handleSubmit = async () => {
     };
 
     const url = selectedAddressId
-        ? `/api/v1/address/addresses/${selectedAddressId}/`
-        : '/api/v1/address/addresses/';
+        ? `${process.env.NEXT_PUBLIC_HOST}/api/v1/address/addresses/${selectedAddressId}/`
+        : `${process.env.NEXT_PUBLIC_HOST}/api/v1/address/addresses/`;
     const method = selectedAddressId ? 'put' : 'post';
 
     try {
@@ -135,7 +136,7 @@ const handleSubmit = async () => {
         });
 
         if (result.isConfirmed) {
-            const response = await api({
+            const response = await axiosClient({
                 method: method,
                 url: url,
                 data: newAddress,

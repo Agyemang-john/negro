@@ -1,8 +1,8 @@
 "use client";
 
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useFollowToggle } from '@/hooks/useFollowToggle';
 import React, { useState, useEffect } from 'react';
+import Cookies from 'js-cookie';
 import Link from 'next/link';
 import CustomTabs  from './CustomTabs';
 import Product from "@/components/productComponents/product";
@@ -103,7 +103,7 @@ const ProductDetail = ({ initialData }) => {
     isFollowing: productData?.is_following,
     followerCount: productData?.follower_count,
     vendorSlug: productData?.product.vendor.slug,
-  });
+  }); 
 
   const { isFollowing, followerCount, loading, handleFollowToggle } = useFollowToggle(
     vendorData.vendorSlug,
@@ -118,6 +118,21 @@ const ProductDetail = ({ initialData }) => {
   const handleSubmit = () => {
 
   }
+
+  useEffect(() => {
+    const productId = String(productData.product.id);
+
+    let viewed = Cookies.get('recently_viewed');
+    let viewedIds = viewed ? viewed.split(',') : [];
+
+    // Remove if it already exists to avoid duplicates
+    viewedIds = viewedIds.filter(id => id !== productId);
+    viewedIds.unshift(productId); // add to front
+    viewedIds = viewedIds.slice(0, 10); // keep latest 10
+
+    Cookies.set('recently_viewed', viewedIds.join(','), { expires: 16 }); // 7-day expiration
+  }, [productData.product.id]);
+  // Recently Viewed Products
 
   const tabLabels = ['Description', 'Additional Information', 'Shipping & Returns', 'Reviews'];
   const tabContents = [

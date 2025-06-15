@@ -1,9 +1,12 @@
 import React, {useEffect, useState} from 'react';
+import Cookies from 'js-cookie';
+import axiosClient from '@/lib/clientFetch';
+
+import AddToCartButton from './AddToCartButton';
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import Link from 'next/link';
 import ProductImage from "./ProductImage";
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import AddToCartButton from './AddToCartButton';
 
 import Rating from '@mui/material/Rating';
 import XIcon from '@mui/icons-material/X';
@@ -14,7 +17,7 @@ import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import Divider from '@mui/material/Divider';
 import Button from '@mui/material/Button';
-import  ProductCard  from "./SideCard";
+import ProductCard from "./SideCard";
 
 import BasicModal from '@/components/modals/Modal';
 // import SizeChart from '../partials/SizeChart';
@@ -29,10 +32,13 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid2';
+import axios from 'axios';
 
 
 const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loading }) => {
     const { sku, slug } = useParams(); // Get route params
+    const guestCart = Cookies.get('guest_cart');
+    const accessToken = Cookies.get('access');
     const searchParams = useSearchParams();
     const router = useRouter();
 
@@ -46,6 +52,7 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
     
    
     const [variantImages, setVariantImages] = useState(data?.variant_data?.variant_images);
+    const [isOutOfStock, setIsOutOfStock] = useState(data?.is_out_of_stock);
     const [isInCart, setIsInCart] = useState(data?.is_in_cart);
     const [cartQuantity, setCartQuantity] = useState(data?.cart_quantity);
     const [productDetail, setProductDetail] = useState(data?.product);
@@ -58,6 +65,7 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
 
     const [openchart, setOpenChart] = React.useState(false);
     const [scroll, setScroll] = React.useState('paper');
+    console.log("Is in cart? ", isInCart)
 
     const handleClickOpen = (scrollType) => () => {
       setOpenChart(true);
@@ -69,31 +77,60 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
     }
 
     const fetchProductData = async (variantId) => {
-      setIsLoading(true)
+      setIsLoading(true);
       try {
-        const url = new URL(`${process.env.NEXT_PUBLIC_HOST}/api/v1/product/${sku}/${slug}/`);
-        if (variantId) url.searchParams.append("variantid", variantId);
-  
-        const res = await fetch(url, { method: "GET", cache: "no-store", credentials: "include"});
-        const data = await res.json();
+        const guestCart = Cookies.get('guest_cart');
+        const accessToken = Cookies.get('access');
+        // Create URL with cache-busting parameter
+        const url = `${process.env.NEXT_PUBLIC_HOST}/api/v1/product/${sku}/${slug}/`;
+        const params = { 
+          ...(variantId && { variantid: variantId }),
+          // guest_cart: guestCart
+        };
 
-        console.log(data);
-        setSizeName(data?.variant_data?.variant.size.name);
+        const headers = {
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+          Cookie: Cookies.toString(),
+        }
+
+        if (guestCart) {
+          headers['X-Guest-Cart'] = guestCart;
+        }
+    
+        // Axios request with cache prevention headers
+        const response = await axios.get(url, {
+          params,
+          headers,
+          withCredentials: true
+        });
+    
+        const data = response.data;
+        
+        // Update state
+        setSizeName(data?.variant_data?.variant?.size?.name);
         setIsInCart(data?.is_in_cart);
+        setIsOutOfStock(data?.is_out_of_stock);
         setCartQuantity(data?.cart_quantity);
-        setSizeDetail(data.variant_data.sizes);
-        setMainImage(data?.variant_data?.variant?.image);
+        setSizeDetail(data?.variant_data?.sizes);
+        setMainImage(data?.variant_data?.variant?.image || data?.p_images?.[0]?.image);
         setProductDetail(data?.product);
         setVariantDetail(data?.variant_data?.variant);
         setAllImages(data?.p_images);
         setVariantImages(data?.variant_data?.variant_images);
-        
+        console.log('API Response:', data);
+    
       } catch (error) {
         console.error('Error fetching product data:', error);
-        setError('Failed to load product data');
+        setError(error.response?.data?.detail || 
+                'Failed to load product data');
+        // Optional: Retry logic could be added here
       } finally {
         setIsLoading(false);
       }
+    };
+    
+    const onSelect = (v) => {
+        handleVariantChange(v);
     };
   
     const handleVariantChange = (newVariantId) => {
@@ -105,16 +142,14 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
       fetchProductData(newVariantId);
     };
 
-    const onSelect = (v) => {
-        handleVariantChange(v);
-    };
-
     const nameShow = (variant) => {
       setSizeName(variant.size.name);
     }
     const nameRemove = () => {
       setSizeName(variantDetail?.size.name);
     }
+
+    
 
 
   return (
@@ -243,7 +278,7 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
                                     onMouseOver={() => nameShow(variant)}
                                     onMouseLeave={() => nameRemove()}
                                   >
-                                    {variant.size.name}
+                                    {variant?.size?.name}
                                   </Button>
                                 </Grid>
                               ))}
@@ -255,7 +290,7 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
                                 productId={productDetail?.id}
                                 variantId={variantDetail?.id}
                                 quantityInCart={cartQuantity}
-                               
+                                isOutOfStock={Boolean(isOutOfStock)}
                               />
                             </div>
 
@@ -337,6 +372,7 @@ const SizeProduct = ({ data, handleFollowToggle, isFollowing, followerCount, loa
         <aside className='col-lg-3'>
           <ProductCard
             isInCart={Boolean(isInCart)}
+            isOutOfStock={Boolean(isOutOfStock)}
             cartQuantity={cartQuantity}
             variant={variantDetail}
             product={productDetail}

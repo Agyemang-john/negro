@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import axiosClient from '@/lib/clientFetch';
+
 import { useAppSelector, useAppDispatch } from '@/redux/hooks';
 import {
   Box, Button, Typography, Modal, TextField, MenuItem, RadioGroup,
@@ -38,14 +40,14 @@ const BasicModal = ({ open, handleClose }) => {
 
   const API_KEY = 'pk.ac7f55c6c458a12ea5ed586db0b1bb4d';
 
+  useEffect(() => {
+    fetchAddresses();
+  }, []);
+
   const fetchAddresses = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_HOST}/api/v1/address/addresses/`,
-        { method: 'GET', cache: "no-store", credentials: "include"}
-      );
-      if (!res.ok) throw new Error("Failed to fetch addresses");
-		  const response = await res.json();
+      const response = await axiosClient.get(`/api/v1/address/addresses/`,);
       setAddressesList(response.data);
     } catch (error) {
       setError('Unable to fetch addresses.');
@@ -55,9 +57,7 @@ const BasicModal = ({ open, handleClose }) => {
     }
   };
 
-  useEffect(() => {
-    fetchAddresses();
-  }, []);
+  
 
   const handleOpenSubModal = (addressId = null) => {
     setSelectedAddressId(addressId);
@@ -99,7 +99,7 @@ const BasicModal = ({ open, handleClose }) => {
 
   const handleAddressClick = async (id) => {
     try {
-      await axios.put('/api/v1/address/addresses/default/', { id });
+      await axiosClient.put(`/api/v1/address/addresses/default/`, { id });
       setAddressesList(addressesList.map((address) =>
         address.id === id ? { ...address, status: true } : { ...address, status: false }
       ));

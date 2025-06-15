@@ -1,3 +1,4 @@
+import Cookies from 'js-cookie';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type {
 	BaseQueryFn,
@@ -11,6 +12,16 @@ const mutex = new Mutex();
 const baseQuery = fetchBaseQuery({
 	baseUrl: `${process.env.NEXT_PUBLIC_HOST}/api`,
 	credentials: 'include',
+	prepareHeaders: (headers) => {
+		const accessToken = Cookies.get('access');
+		const guestCart = Cookies.get('guest_cart');
+		if (accessToken) {
+			headers.set('Authorization', `Bearer ${accessToken}`)
+		}
+		if (guestCart) {
+			headers.set('X-Guest-Cart', guestCart)
+		}
+	}
 });
 const baseQueryWithReauth: BaseQueryFn<
 	string | FetchArgs,

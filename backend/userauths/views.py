@@ -3,12 +3,14 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
+import logging
 
-from order.utils import transfer_cart_to_user
+from order.utils import merge_guest_cart_with_user_cart
 from djoser.social.views import ProviderAuthView
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 
+logger = logging.getLogger(__name__)
 
 
 from rest_framework_simplejwt.views import (
@@ -58,22 +60,11 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             access_token = response.data.get("access")
             refresh_token = response.data.get("refresh")
 
-            from rest_framework_simplejwt.tokens import AccessToken
-            decoded_token = AccessToken(access_token)
-            user_id = decoded_token["user_id"]
-
-            User = get_user_model()
-            try:
-                user = User.objects.get(id=user_id)
-                transfer_cart_to_user(request, user)  # Merge guest cart with user cart
-            except User.DoesNotExist:
-                return Response({"error": "User not found"}, status=400)
-
             # Set HTTP-only cookies
             response.set_cookie(
                 "access",
                 access_token,
-                max_age=settings.AUTH_COOKIE_MAX_AGE,
+                max_age=settings.AUTH_ACCESS_MAX_AGE,
                 path=settings.AUTH_COOKIE_PATH,
                 secure=settings.AUTH_COOKIE_SECURE,
                 httponly=settings.AUTH_COOKIE_HTTP_ONLY,
@@ -82,12 +73,17 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             response.set_cookie(
                 "refresh",
                 refresh_token,
-                max_age=settings.AUTH_COOKIE_MAX_AGE,
+                max_age=settings.AUTH_REFRESH_MAX_AGE,
                 path=settings.AUTH_COOKIE_PATH,
                 secure=settings.AUTH_COOKIE_SECURE,
                 httponly=settings.AUTH_COOKIE_HTTP_ONLY,
                 samesite=settings.AUTH_COOKIE_SAMESITE
             )
+
+            try:
+                merge_guest_cart_with_user_cart(request)
+            except Exception as e:
+                logger.warning(f"Guest cart merge failed: {e}")
 
 
             # Remove tokens from response body for extra security
@@ -98,31 +94,35 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
-        refresh_token = request.COOKIES.get('refresh')  # Get refresh token from cookies
+        refresh_token = request.COOKIES.get('refresh')
 
         if refresh_token:
-            request.data['refresh'] = refresh_token  # Inject into request
+            request.data['refresh'] = refresh_token
 
         response = super().post(request, *args, **kwargs)
 
         if response.status_code == 200:
             access_token = response.data.get('access')
 
-            # Store new access token in cookies
+            # Set the token in cookie
             response.set_cookie(
                 "access",
                 access_token,
-                max_age=settings.AUTH_COOKIE_MAX_AGE,
+                max_age=settings.AUTH_ACCESS_MAX_AGE,
                 path=settings.AUTH_COOKIE_PATH,
                 secure=settings.AUTH_COOKIE_SECURE,
                 httponly=settings.AUTH_COOKIE_HTTP_ONLY,
                 samesite=settings.AUTH_COOKIE_SAMESITE
             )
 
-            # Remove access token from response body for security
-            del response.data["access"]
+            # ✅ Keep it in the response body *only* if from SSR (optional header flag)
+            if request.headers.get("X-SSR-Refresh") == "true":
+                pass  # leave token in body for SSR
+            else:
+                del response.data["access"]
 
         return response
+
 
 
 class CustomTokenVerifyView(TokenVerifyView):

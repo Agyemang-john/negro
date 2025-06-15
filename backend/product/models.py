@@ -187,6 +187,7 @@ class Product(models.Model):
         ('Color','Color'),
         ('Size-Color','Size-Color'),
     )
+    
     OPTIONS=(
         ('book','Book'),
         ('grocery','Grocery'),

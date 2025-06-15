@@ -22,6 +22,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/page.tsx", "app/[sku]/[slug]/page.jsx", "redux/store.ts", "components/forms/RegisterForm.jsx", "components/forms/LoginForm.jsx", "components/productDetail/ProductImage.jsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/(main)/page.tsx", "app/[sku]/[slug]/page.jsx", "redux/store.ts", "components/forms/RegisterForm.jsx", "components/forms/LoginForm.jsx", "components/productDetail/ProductImage.jsx", "components/Header.jsx", "app/cart/page.jsx", "components/cart/CartCard.jsx", "components/productDetail/AddToCartButton.tsx"],
   "exclude": ["node_modules"]
 }

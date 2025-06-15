@@ -1,12 +1,16 @@
 from django.db import models
 from django.forms import ModelForm
-from userauths.models import User
 from product.models import *
 from django.utils.html import mark_safe
 from address.models import *
 from vendor.models import *
 from decimal import Decimal
 from .service import calculate_delivery_fee
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
+import uuid
+
+
 # Create your models here.
 
 
@@ -19,11 +23,49 @@ PAYMENT_STATUS = (
     ('canceled', 'Canceled'),
 )
 
+User = get_user_model()
+
+class CartManager(models.Manager):
+    def get_for_request(self, request):
+        """Get existing cart for the request (user or session) without creating a new one."""
+        if request.user.is_authenticated:
+            try:
+                return self.get(user=request.user)
+            except Cart.DoesNotExist:
+                return None
+        
+        return None
+
+    def create_for_request(self, request):
+        """Create a new cart for the request (user or session)."""
+        cart, created = self.get_or_create(user=request.user)
+        return cart
+    
+    def get_or_create_for_request(self, request):
+        """Get or create a cart for the request."""
+        if request.user.is_authenticated:
+            cart, created = self.get_or_create(user=request.user)
+            return cart
+        return None
+
+
 class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    session_id = models.CharField(max_length=100, null=True, blank=True)  # For guest users
+    session_id = models.CharField(max_length=100, null=True, blank=True, unique=True, db_index=True)  # For guest users
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = CartManager()
+
+
+    class Meta:
+        ordering = ['-updated_at']
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(user__isnull=False) | models.Q(session_id__isnull=False),
+                name='user_or_session_required'
+            )
+        ]
 
     def __str__(self):
         if self.user and self.user.email:
@@ -31,6 +73,41 @@ class Cart(models.Model):
         elif self.session_id:
             return f"Cart (Session: {self.session_id})"
         return "Cart (Guest)"
+
+    @property
+    def is_guest_cart(self):
+        return self.user is None 
+
+    def add_item(self, product, quantity, variant=None):
+        """
+        Add or update a cart item.
+        """
+        item, created = self.cart_items.get_or_create(product=product, variant=variant)
+        if not created:
+            item.quantity += quantity
+        else:
+            item.quantity = quantity
+        item.save()
+    
+    def merge_with(self, other_cart):
+        """Merge another cart into this one (for when a guest logs in)."""
+        if self.user is None or other_cart.user is not None:
+            raise ValueError("Can only merge a guest cart into a user cart")
+        
+        for item in other_cart.items.all():
+            existing_item = self.items.filter(
+                product=item.product,
+                variant=item.variant
+            ).first()
+            
+            if existing_item:
+                existing_item.quantity += item.quantity
+                existing_item.save()
+            else:
+                item.cart = self
+                item.save()
+        
+        other_cart.delete()
     
     @property
     def total_quantity(self):

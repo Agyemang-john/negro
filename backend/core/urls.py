@@ -14,7 +14,6 @@ urlpatterns = [
     path('user/<int:user_id>/', get_user_data, name='get_user_data'),
     path('check-email-phone/', CheckEmailPhoneView.as_view(), name='check-email-phone'),
     path('protected/', protected_view, name='protected_view'),
-    path('cart/add/', AddToCartView.as_view(), name='add-cart'),
     path('cart/remove/', RemoveFromCartView.as_view(), name='remove-cart'),
     path('cart/check/', CheckCartView.as_view(), name='check-cart'),
     path('cart/sync/', SyncCartView.as_view(), name='sync-cart'),

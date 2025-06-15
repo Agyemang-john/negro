@@ -10,7 +10,7 @@ interface CartItem {
 
 interface CartResponse {
   items: CartItem[];
-  total_quantity: number;
+  quantity: number;
 }
 
 interface AddToCartArgs {

@@ -35,7 +35,7 @@ const ProductCarousel = () => {
 
   const fetchData = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_HOST}/api/index/`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/index/`, {
           cache: "no-store", // Avoid caching for dynamic content
           credentials: "include"
         });
